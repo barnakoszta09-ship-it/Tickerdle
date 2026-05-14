@@ -1,6 +1,8 @@
 import { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { getDailyTicker, getRandomTicker, getDailySeed, isValidTicker } from '../utils/tickers';
 import { evaluateGuess, MAXATTEMPTS, WORDLENGTH } from '../utils/gameLogic';
+import { getRandomHLPair } from '../utils/sp500';
+import { saveScore } from '../utils/leaderboard';
 
 const GameContext = createContext();
 
@@ -8,13 +10,15 @@ const STORAGEKEY = 'tickerdlestate';
 
 function getInitialState(mode = 'daily') {
   const saved = localStorage.getItem(STORAGEKEY);
+  const playerName = localStorage.getItem('tickerdle_playerName') || 'Anonymous';
+  
   if (saved) {
     const parsed = JSON.parse(saved);
     const currentSeed = getDailySeed();
     
     // If it's a new day in daily mode, reset
     if (mode === 'daily' && parsed.dailySeed !== currentSeed) {
-      return createFreshState('daily');
+      return { ...createFreshState('daily'), playerName };
     }
     
     // If switching to endless from a completed daily, keep daily but create endless
@@ -22,27 +26,41 @@ function getInitialState(mode = 'daily') {
       return {
         ...createFreshState('endless'),
         dailyState: parsed,
+        playerName,
       };
     }
     
     // Return saved state if mode matches
     if (parsed.mode === mode) {
-      return parsed;
+      return { ...parsed, playerName };
     }
     
     // Return saved state with mode switch data
     if (parsed.mode === 'daily' && mode === 'endless' && parsed.endlessState) {
-      return parsed.endlessState;
+      return { ...parsed.endlessState, playerName };
     }
     if (parsed.mode === 'endless' && mode === 'daily' && parsed.dailyState) {
-      return parsed.dailyState;
+      return { ...parsed.dailyState, playerName };
     }
   }
   
-  return createFreshState(mode);
+  return { ...createFreshState(mode), playerName };
 }
 
 function createFreshState(mode) {
+  if (mode === 'higher-lower') {
+    const pair = getRandomHLPair();
+    return {
+      mode,
+      hlCurrent: pair.first,
+      hlNext: pair.second,
+      hlStreak: 0,
+      hlGuessed: null,
+      hlGameOver: false,
+      hlShowMarketCap: true,
+    };
+  }
+
   const target = mode === 'daily' ? getDailyTicker() : getRandomTicker();
   return {
     mode,
@@ -137,6 +155,47 @@ function gameReducer(state, action) {
       return createFreshState(state.mode);
     }
 
+    case 'MAKE_HL_GUESS': {
+      if (state.hlGameOver) return state;
+      
+      const guess = action.guess;
+      const isCorrect = (guess === 'higher' && state.hlNext.marketCap > state.hlCurrent.marketCap) ||
+                        (guess === 'lower' && state.hlNext.marketCap < state.hlCurrent.marketCap);
+      
+      if (isCorrect) {
+        const pair = getRandomHLPair();
+        return {
+          ...state,
+          hlCurrent: state.hlNext,
+          hlNext: pair.first,
+          hlStreak: state.hlStreak + 1,
+          hlGuessed: true,
+          hlShowMarketCap: false,
+        };
+      } else {
+        return {
+          ...state,
+          hlGameOver: true,
+          hlGuessed: false,
+        };
+      }
+    }
+
+    case 'CLEAR_HL_GUESS': {
+      return {
+        ...state,
+        hlGuessed: null,
+        hlShowMarketCap: true,
+      };
+    }
+
+    case 'SET_PLAYER_NAME': {
+      return {
+        ...state,
+        playerName: action.playerName,
+      };
+    }
+
     default:
       return state;
   }
@@ -190,6 +249,22 @@ export function GameProvider({ children }) {
     dispatch({ type: 'RESETGAME' });
   }, []);
 
+  const makeHLGuess = useCallback((guess) => {
+    dispatch({ type: 'MAKE_HL_GUESS', guess });
+  }, []);
+
+  const setPlayerName = useCallback((name) => {
+    localStorage.setItem('tickerdle_playerName', name);
+    dispatch({ type: 'SET_PLAYER_NAME', playerName: name });
+  }, []);
+
+  useEffect(() => {
+    if (state.hlGuessed !== null) {
+      const timer = setTimeout(() => dispatch({ type: 'CLEAR_HL_GUESS' }), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [state.hlGuessed]);
+
   const value = {
     ...state,
     addLetter,
@@ -198,6 +273,8 @@ export function GameProvider({ children }) {
     switchMode,
     newEndlessGame,
     resetGame,
+    makeHLGuess,
+    setPlayerName,
     puzzleNumber: getDailySeed(),
   };
 

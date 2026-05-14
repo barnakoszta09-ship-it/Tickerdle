@@ -1,22 +1,51 @@
-import { useEffect, useState } from 'react';
-import { useGame } from '../context/index.jsx';
+import { useEffect, useState, useRef } from 'react';
+import { useGame } from '../context/GameContext';
 import ShareButton from './ShareButton';
+import { saveScore } from '../utils/leaderboard';
 
 export default function Modal() {
-  const { gameOver, won, target, mode, streak, newEndlessGame, puzzleNumber, guesses } = useGame();
+  const { gameOver, won, target, mode, streak, newEndlessGame, resetGame, puzzleNumber, guesses, playerName } = useGame();
   const [show, setShow] = useState(false);
+  const hasScoreSaved = useRef(false);
 
   useEffect(() => {
-    if (gameOver) {
+    if (gameOver && !hasScoreSaved.current) {
+      // Save score to leaderboard
+      let score = 0;
+      
+      if (mode === 'daily') {
+        // For daily, score is based on guesses (6 = perfect, 1 = worst)
+        score = won ? Math.max(1, 7 - guesses.length) : 0;
+      } else if (mode === 'endless') {
+        // For endless, score is the streak
+        score = streak;
+      }
+      
+      if (score > 0) {
+        saveScore(mode, playerName, score);
+      }
+      
+      hasScoreSaved.current = true;
+      
       // Delay modal to let animations complete
       const timer = setTimeout(() => setShow(true), 1500);
       return () => clearTimeout(timer);
     } else {
       setShow(false);
     }
-  }, [gameOver]);
+  }, [gameOver, mode, won, guesses, streak, playerName]);
 
   if (!show) return null;
+
+  const handlePlayAgain = () => {
+    hasScoreSaved.current = false;
+    if (mode === 'endless') {
+      newEndlessGame();
+    } else {
+      resetGame();
+    }
+    setShow(false);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
@@ -64,14 +93,12 @@ export default function Modal() {
         <div className="flex flex-col gap-3">
           <ShareButton />
           
-          {mode === 'endless' && (
-            <button
-              onClick={newEndlessGame}
-              className="px-6 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
-            >
-              Next Ticker
-            </button>
-          )}
+          <button
+            onClick={handlePlayAgain}
+            className="px-6 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
+          >
+            {mode === 'daily' ? 'Play Again Tomorrow' : 'Play Again'}
+          </button>
           
           <button
             onClick={() => setShow(false)}

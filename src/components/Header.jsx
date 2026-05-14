@@ -1,3 +1,4 @@
+import LivePlayerCounter from './LivePlayerCounter';
 import ModeToggle from './ModeToggle';
 
 export default function Header() {
@@ -7,6 +8,7 @@ export default function Header() {
         <h1 className="text-xl font-bold font-mono tracking-tight text-terminal-text">
           TICKERDLE
         </h1>
+        <LivePlayerCounter />
       </div>
       <ModeToggle />
     </header>
