@@ -12,41 +12,35 @@ function getInitialState(mode = 'daily') {
   const saved = localStorage.getItem(STORAGEKEY);
   const playerName = localStorage.getItem('tickerdle_playerName') || 'Anonymous';
   const soundEnabled = localStorage.getItem('tickerdle_soundEnabled') !== 'false';
-  const soundVolume = parseFloat(localStorage.getItem('tickerdle_soundVolume')) || 0.3;
-  
+  const rawVolume = parseFloat(localStorage.getItem('tickerdle_soundVolume'));
+  const soundVolume = isNaN(rawVolume) ? 0.5 : rawVolume;
+  const soundSettings = { playerName, soundEnabled, soundVolume };
+
   if (saved) {
     const parsed = JSON.parse(saved);
     const currentSeed = getDailySeed();
-    
-    // If it's a new day in daily mode, reset
+
     if (mode === 'daily' && parsed.dailySeed !== currentSeed) {
-      return { ...createFreshState('daily'), playerName };
+      return { ...createFreshState('daily'), ...soundSettings };
     }
-    
-    // If switching to endless from a completed daily, keep daily but create endless
+
     if (mode === 'endless' && parsed.mode === 'daily' && parsed.gameOver) {
-      return {
-        ...createFreshState('endless'),
-        dailyState: parsed,
-        playerName,
-      };
+      return { ...createFreshState('endless'), dailyState: parsed, ...soundSettings };
     }
-    
-    // Return saved state if mode matches
+
     if (parsed.mode === mode) {
-      return { ...parsed, playerName };
+      return { ...parsed, ...soundSettings };
     }
-    
-    // Return saved state with mode switch data
+
     if (parsed.mode === 'daily' && mode === 'endless' && parsed.endlessState) {
-      return { ...parsed.endlessState, playerName };
+      return { ...parsed.endlessState, ...soundSettings };
     }
     if (parsed.mode === 'endless' && mode === 'daily' && parsed.dailyState) {
-      return { ...parsed.dailyState, playerName };
+      return { ...parsed.dailyState, ...soundSettings };
     }
   }
-  
-  return { ...createFreshState(mode), playerName, soundEnabled, soundVolume };
+
+  return { ...createFreshState(mode), ...soundSettings };
 }
 
 function createFreshState(mode) {
@@ -152,11 +146,17 @@ function gameReducer(state, action) {
         streak: state.won ? state.streak : 0,
         usedTickers: [...state.usedTickers, newTarget],
         target: newTarget,
+        soundEnabled: state.soundEnabled,
+        soundVolume: state.soundVolume,
       };
     }
 
     case 'RESETGAME': {
-      return createFreshState(state.mode);
+      return {
+        ...createFreshState(state.mode),
+        soundEnabled: state.soundEnabled,
+        soundVolume: state.soundVolume,
+      };
     }
 
     case 'MAKE_HL_GUESS': {

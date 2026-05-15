@@ -78,21 +78,19 @@ export default function SettingsModal({ isOpen, onClose }) {
             </button>
           </div>
 
-          {soundEnabled && (
-            <div>
-              <label className="block text-xs uppercase text-terminal-muted mb-2">Volume</label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={soundVolume}
-                onChange={handleVolumeChange}
-                className="w-full h-2 bg-terminal-border rounded appearance-none cursor-pointer"
-              />
-              <p className="text-xs text-terminal-muted mt-2">{Math.round(soundVolume * 100)}%</p>
-            </div>
-          )}
+          <div className={soundEnabled ? '' : 'opacity-40 pointer-events-none'}>
+            <label className="block text-xs uppercase text-terminal-muted mb-2">Volume</label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={soundVolume}
+              onChange={handleVolumeChange}
+              className="w-full h-2 bg-terminal-border rounded appearance-none cursor-pointer"
+            />
+            <p className="text-xs text-terminal-muted mt-2">{Math.round(soundVolume * 100)}%</p>
+          </div>
         </div>
 
         {/* Social Links Section - TODO: Add real links when community channels ready */}
