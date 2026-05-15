@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useGame } from '../context/index.jsx';
+import { playSoundKeyPress, playSoundError } from '../utils/soundEffects';
 
 const KEYBOARDROWS = [
   ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -15,7 +16,7 @@ const keyStateStyles = {
 };
 
 export default function Keyboard() {
-  const { addLetter, deleteLetter, submitGuess, guesses, evaluations, gameOver } = useGame();
+  const { addLetter, deleteLetter, submitGuess, guesses, evaluations, gameOver, soundEnabled, soundVolume, shake } = useGame();
 
   // Build letter states from past guesses
   const letterStates = {};
@@ -43,10 +44,12 @@ export default function Keyboard() {
       submitGuess();
     } else if (key === 'DEL' || key === 'BACKSPACE') {
       deleteLetter();
+      if (soundEnabled) playSoundKeyPress(soundVolume);
     } else if (/^[A-Z]$/.test(key)) {
       addLetter(key);
+      if (soundEnabled) playSoundKeyPress(soundVolume);
     }
-  }, [addLetter, deleteLetter, submitGuess, gameOver]);
+  }, [addLetter, deleteLetter, submitGuess, gameOver, soundEnabled, soundVolume]);
 
   // Physical keyboard support
   useEffect(() => {

@@ -11,6 +11,8 @@ const STORAGEKEY = 'tickerdlestate';
 function getInitialState(mode = 'daily') {
   const saved = localStorage.getItem(STORAGEKEY);
   const playerName = localStorage.getItem('tickerdle_playerName') || 'Anonymous';
+  const soundEnabled = localStorage.getItem('tickerdle_soundEnabled') !== 'false';
+  const soundVolume = parseFloat(localStorage.getItem('tickerdle_soundVolume')) || 0.3;
   
   if (saved) {
     const parsed = JSON.parse(saved);
@@ -44,7 +46,7 @@ function getInitialState(mode = 'daily') {
     }
   }
   
-  return { ...createFreshState(mode), playerName };
+  return { ...createFreshState(mode), playerName, soundEnabled, soundVolume };
 }
 
 function createFreshState(mode) {
@@ -81,7 +83,8 @@ function createFreshState(mode) {
 function gameReducer(state, action) {
   switch (action.type) {
     case 'ADDLETTER': {
-      if (state.gameOver || state.currentGuess.length >= WORDLENGTH) {
+      const targetLength = state.target ? state.target.length : WORDLENGTH;
+      if (state.gameOver || state.currentGuess.length >= targetLength) {
         return state;
       }
       return {
@@ -102,8 +105,9 @@ function gameReducer(state, action) {
 
     case 'SUBMITGUESS': {
       const guess = state.currentGuess.toUpperCase();
+      const targetLength = state.target ? state.target.length : WORDLENGTH;
       
-      if (state.gameOver || guess.length !== WORDLENGTH) {
+      if (state.gameOver || guess.length !== targetLength) {
         return state;
       }
 
@@ -163,11 +167,12 @@ function gameReducer(state, action) {
                         (guess === 'lower' && state.hlNext.marketCap < state.hlCurrent.marketCap);
       
       if (isCorrect) {
-        const pair = getRandomHLPair();
+        const newCurrent = state.hlNext;
+        const pair = getRandomHLPair(newCurrent.symbol);
         return {
           ...state,
-          hlCurrent: state.hlNext,
-          hlNext: pair.first,
+          hlCurrent: newCurrent,
+          hlNext: pair.second,
           hlStreak: state.hlStreak + 1,
           hlGuessed: true,
           hlShowMarketCap: false,
@@ -193,6 +198,20 @@ function gameReducer(state, action) {
       return {
         ...state,
         playerName: action.playerName,
+      };
+    }
+
+    case 'SET_SOUND_ENABLED': {
+      return {
+        ...state,
+        soundEnabled: action.soundEnabled,
+      };
+    }
+
+    case 'SET_SOUND_VOLUME': {
+      return {
+        ...state,
+        soundVolume: action.soundVolume,
       };
     }
 
@@ -258,6 +277,16 @@ export function GameProvider({ children }) {
     dispatch({ type: 'SET_PLAYER_NAME', playerName: name });
   }, []);
 
+  const setSoundEnabled = useCallback((enabled) => {
+    localStorage.setItem('tickerdle_soundEnabled', enabled);
+    dispatch({ type: 'SET_SOUND_ENABLED', soundEnabled: enabled });
+  }, []);
+
+  const setSoundVolume = useCallback((volume) => {
+    localStorage.setItem('tickerdle_soundVolume', volume);
+    dispatch({ type: 'SET_SOUND_VOLUME', soundVolume: volume });
+  }, []);
+
   useEffect(() => {
     if (state.hlGuessed !== null) {
       const timer = setTimeout(() => dispatch({ type: 'CLEAR_HL_GUESS' }), 1000);
@@ -275,6 +304,8 @@ export function GameProvider({ children }) {
     resetGame,
     makeHLGuess,
     setPlayerName,
+    setSoundEnabled,
+    setSoundVolume,
     puzzleNumber: getDailySeed(),
   };
 

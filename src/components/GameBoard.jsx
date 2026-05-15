@@ -1,9 +1,41 @@
+import { useEffect } from 'react';
 import { useGame } from '../context/index.jsx';
 import Tile from './Tile';
 import { MAXATTEMPTS, WORDLENGTH } from '../utils/gameLogic.js';
+import { playSoundError, playSoundCorrect, playSoundWrong, playSoundWin } from '../utils/soundEffects';
 
 export default function GameBoard() {
-  const { guesses, evaluations, currentGuess, shake, revealRow, won } = useGame();
+  const { guesses, evaluations, currentGuess, shake, revealRow, won, target, gameOver, soundEnabled, soundVolume } = useGame();
+  const tickerLength = target ? target.length : WORDLENGTH;
+
+  // Play shake sound for invalid ticker
+  useEffect(() => {
+    if (shake && soundEnabled) {
+      playSoundError(soundVolume);
+    }
+  }, [shake, soundEnabled, soundVolume]);
+
+  // Play correct/wrong sounds when revealing tiles
+  useEffect(() => {
+    if (revealRow !== null && evaluations[revealRow] && soundEnabled) {
+      const evaluation = evaluations[revealRow];
+      const hasCorrect = evaluation.some(e => e === 'correct');
+      const isLastGuess = revealRow === guesses.length - 1;
+      
+      // Add delay for sound to play after flip animation completes
+      setTimeout(() => {
+        if (hasCorrect && isLastGuess && won) {
+          playSoundWin(soundVolume);
+        } else if (isLastGuess && gameOver && !won) {
+          playSoundWrong(soundVolume);
+        } else if (hasCorrect) {
+          playSoundCorrect(soundVolume * 0.7);
+        } else {
+          playSoundWrong(soundVolume * 0.6);
+        }
+      }, 100 + tickerLength * 100); // Wait for tile flip animations
+    }
+  }, [revealRow, evaluations, won, gameOver, soundEnabled, soundVolume, guesses.length, tickerLength]);
 
   const rows = [];
   
@@ -14,7 +46,7 @@ export default function GameBoard() {
     const evaluation = isPastRow ? evaluations[i] : null;
     
     const tiles = [];
-    for (let j = 0; j < WORDLENGTH; j++) {
+    for (let j = 0; j < tickerLength; j++) {
       const letter = guess[j] || '';
       const state = evaluation ? evaluation[j] : (letter ? 'filled' : 'empty');
       

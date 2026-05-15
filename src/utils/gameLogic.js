@@ -5,10 +5,11 @@ export function evaluateGuess(guess, target) {
   const result = [];
   const targetLetters = target.split('');
   const guessLetters = guess.toUpperCase().split('');
-  const used = new Array(WORDLENGTH).fill(false);
+  const targetLength = target.length;
+  const used = new Array(targetLength).fill(false);
 
   // First pass: find correct positions (green)
-  for (let i = 0; i < WORDLENGTH; i++) {
+  for (let i = 0; i < targetLength; i++) {
     if (guessLetters[i] === targetLetters[i]) {
       result[i] = 'correct';
       used[i] = true;
@@ -16,7 +17,7 @@ export function evaluateGuess(guess, target) {
   }
 
   // Second pass: find wrong positions (yellow) and wrong letters (gray)
-  for (let i = 0; i < WORDLENGTH; i++) {
+  for (let i = 0; i < targetLength; i++) {
     if (result[i]) continue;
 
     const letterIndex = targetLetters.findIndex(

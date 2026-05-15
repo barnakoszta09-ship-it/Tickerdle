@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useGame } from '../context/GameContext';
+import { playSoundTileFlip } from '../utils/soundEffects';
 
 const stateStyles = {
   empty: 'border-terminal-border bg-transparent',
@@ -9,6 +11,7 @@ const stateStyles = {
 };
 
 export default function Tile({ letter, state = 'empty', delay = 0, shouldAnimate = false }) {
+  const { soundEnabled, soundVolume } = useGame();
   const [revealed, setRevealed] = useState(!shouldAnimate);
   const [isFlipping, setIsFlipping] = useState(false);
 
@@ -16,6 +19,7 @@ export default function Tile({ letter, state = 'empty', delay = 0, shouldAnimate
     if (shouldAnimate && !revealed) {
       const flipTimer = setTimeout(() => {
         setIsFlipping(true);
+        if (soundEnabled) playSoundTileFlip(soundVolume * 0.8);
       }, delay);
 
       const revealTimer = setTimeout(() => {
@@ -28,7 +32,7 @@ export default function Tile({ letter, state = 'empty', delay = 0, shouldAnimate
         clearTimeout(revealTimer);
       };
     }
-  }, [shouldAnimate, revealed, delay]);
+  }, [shouldAnimate, revealed, delay, soundEnabled, soundVolume, letter, state]);
 
   const currentState = revealed ? state : (letter ? 'filled' : 'empty');
 
