@@ -11,5 +11,5 @@ server/.env
 # PM2 logs generated on the server
 server/logs/
 
-# Bug report data written on the server
-data/
+# Bug report data written on the server (root-level only, not server/src/data/)
+/data/
