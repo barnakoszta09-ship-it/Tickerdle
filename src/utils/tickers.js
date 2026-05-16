@@ -1,64 +1,127 @@
-export const TICKERS = [
-  'AAPL', 'TSLA', 'NVDA', 'MSFT', 'AMZN', 'GOOG', 'META', 'NFLX',
-  'PYPL', 'INTC', 'CSCO', 'ORCL', 'ADBE', 'UBER', 'LYFT', 'SNAP',
-  'PINS', 'SPOT', 'SHOP', 'ZOOM', 'DOCU', 'ROKU', 'PLTR', 'COIN',
-  'HOOD', 'DKNG', 'RBLX', 'ABNB', 'DASH', 'PATH', 'SNOW', 'CRWD',
-  'OKTA', 'DDOG', 'TEAM', 'TWLO', 'WDAY', 'SPLK', 'VEEV', 'ANSS',
-  'CDNS', 'SNPS', 'KLAC', 'LRCX', 'AMAT', 'ASML', 'MRVL', 'AVGO',
-  'QCOM', 'SWKS', 'QRVO', 'XLNX', 'MCHP', 'MPWR', 'SLAB', 'CRUS',
-  'WOLF', 'ENPH', 'SEDG', 'FSLR', 'SPWR', 'PLUG', 'BLNK', 'CHPT',
-  'RIVN', 'LCID', 'XPEV', 'WKHS', 'RIDE', 'ARVL', 'GOEV', 'FFIE',
-  'BABA', 'BIDU', 'BILI', 'DIDI', 'FUTU', 'HUYA', 'VNET', 'VIPS',
-  'WISH', 'EBAY', 'ETSY', 'CHWY', 'WOOF', 'BARK', 'FIGS', 'LULU',
-  'DECK', 'CROX', 'BIRD', 'ONON', 'YETI', 'BROS', 'SHAK', 'CAVA',
-  'WING', 'PLAY', 'BOWL', 'DENN', 'CAKE', 'TXRH', 'BLMN', 'RUTH',
-  'SBUX', 'DNKN', 'PZZA', 'JACK', 'ARCO', 'TACO', 'LOCO', 'WING',
-  'COST', 'FIVE', 'DLTR', 'OLLI', 'ULTA', 'SFIX', 'RENT', 'REAL',
-  'OPEN', 'RDFN', 'EXPI', 'FTHM', 'COMP', 'GHLD', 'UWMC', 'SOFI',
-  'UPST', 'AFRM', 'LMND', 'ROOT', 'HIPO', 'EVER', 'KINS', 'RELY',
-  'BILL', 'FOUR', 'PAYX', 'PAYC', 'PCTY', 'HUBS', 'XERO', 'INTU',
-  'ADSK', 'FIGM', 'FROG', 'GTLB', 'CFLT', 'ESTC', 'NEWR', 'SUMO',
-  'DOMO', 'PLAN', 'COUP', 'CDAY', 'ASAN', 'MNDY', 'SMAR', 'CLDR',
-  'ALTR', 'PEGA', 'APPN', 'BLZE', 'BASE', 'KVYO', 'BRZE', 'PCOR',
-  'MELI', 'STNE', 'PAGS', 'GLOB', 'DESP', 'VTEX', 'CSAN', 'EGHT',
-  'TWST', 'BEAM', 'CRSP', 'NTLA', 'EDIT', 'VERV', 'INZY', 'BLUE',
-  'SGEN', 'EXEL', 'VRTX', 'REGN', 'GILD', 'BIIB', 'AMGN', 'MRNA',
-  'BNTX', 'NVAX', 'ARCT', 'CVAC', 'VXRT', 'OCGN', 'CLOV', 'HIMS',
-  'DOCS', 'TDOC', 'AMWL', 'TALK', 'CERT', 'ACCD', 'LFST', 'ISRG',
-  'DXCM', 'PODD', 'TNDM', 'NVCR', 'AXNX', 'NVRO', 'IRTC', 'INMD',
-  'ALGN', 'XRAY', 'HSIC', 'PDCO', 'OMCL', 'VEEV', 'HCAT', 'PHYS',
-  'PSLV', 'PPLT', 'SIVR', 'SGOL', 'AAAU', 'GLDM', 'IAUM', 'OUNZ',
-  'JETS', 'AWAY', 'CRUZ', 'BOAT', 'SPCX', 'ARKK', 'ARKW', 'ARKF',
-  'ARKG', 'ARKQ', 'ARKX', 'PRNT', 'IZRL', 'MOON', 'SARK', 'TARK',
-  'SQQQ', 'TQQQ', 'SPXL', 'SPXS', 'UPRO', 'SPXU', 'UDOW', 'SDOW',
-  'LABU', 'LABD', 'SOXL', 'SOXS', 'FNGU', 'FNGD', 'WEBL', 'WEBS',
-  'CURE', 'DRIP', 'GUSH', 'NRGU', 'OILU', 'OILD', 'ERSX', 'VIXM',
-  'VIXY', 'UVXY', 'SVXY', 'SVIX', 'VIIX', 'VXUS', 'SPHD', 'JEPI',
-  'JEPQ', 'XYLD', 'QYLD', 'RYLD', 'DIVO', 'SCHD', 'DGRO', 'NOBL'
+/**
+ * S&P 500 constituent ticker list — client copy used for local validation.
+ * Source: Wikipedia "List of S&P 500 companies" (scraped May 2025).
+ * Must stay in sync with server/src/data/tickers.js.
+ * Excludes dot-class shares (BRK.B, BF.B) — no dot key on the game keyboard.
+ */
+
+// ── Communication Services ────────────────────────────────────────────────────
+const COMM = [
+  'CHTR', 'CMCSA', 'EA', 'FOXA', 'FOX', 'GOOG', 'GOOGL', 'LYV',
+  'META', 'NFLX', 'NWSA', 'NWS', 'OMC', 'PSKY', 'SATS', 'T', 'TMUS', 'VZ', 'WBD',
 ];
 
-// Get today's date as a seed for the daily puzzle
+// ── Consumer Discretionary ────────────────────────────────────────────────────
+const DISC = [
+  'ABNB', 'AMZN', 'APTV', 'AZO', 'BBY', 'BKNG', 'CCL', 'CVNA', 'DASH',
+  'DECK', 'DHI', 'DPZ', 'DRI', 'EBAY', 'EXPE', 'F', 'GM', 'GPC', 'GRMN',
+  'HAS', 'HD', 'HLT', 'LEN', 'LOW', 'LULU', 'LVS', 'MAR', 'MCD', 'MGM',
+  'NKE', 'NCLH', 'NVR', 'ORLY', 'POOL', 'RCL', 'RL', 'ROST', 'TJX', 'TKO',
+  'TPR', 'TSLA', 'TTWO', 'YUM',
+];
+
+// ── Consumer Staples ──────────────────────────────────────────────────────────
+const STAP = [
+  'ADM', 'BG', 'CAG', 'CASY', 'CL', 'CLX', 'COST', 'CPB', 'DG', 'DLTR',
+  'EL', 'GIS', 'HRL', 'HSY', 'KDP', 'KHC', 'KMB', 'KO', 'KR', 'KVUE',
+  'MDLZ', 'MKC', 'MNST', 'MO', 'PEP', 'PG', 'PM', 'STZ', 'SYY', 'TAP',
+  'TSN', 'WMT',
+];
+
+// ── Energy ────────────────────────────────────────────────────────────────────
+const ENRG = [
+  'APA', 'BKR', 'COP', 'CVX', 'DVN', 'EOG', 'EQT', 'EXE', 'FANG', 'HAL',
+  'KMI', 'MPC', 'OKE', 'OXY', 'PSX', 'SLB', 'TPL', 'TRGP', 'VLO', 'XOM',
+];
+
+// ── Financials ────────────────────────────────────────────────────────────────
+const FINL = [
+  'ACGL', 'AFL', 'AIG', 'AIZ', 'AJG', 'ALL', 'AMP', 'APO', 'ARES', 'AXP',
+  'BAC', 'BEN', 'BK', 'BLK', 'BRO', 'BX', 'C', 'CB', 'CBOE', 'CFG', 'CINF',
+  'CME', 'COIN', 'COF', 'CPAY', 'EG', 'ERIE', 'FDS', 'FIS', 'FISV', 'FITB',
+  'GL', 'GPN', 'GS', 'HIG', 'HBAN', 'IBKR', 'ICE', 'IVZ', 'JKHY', 'JPM',
+  'KEY', 'KKR', 'L', 'MCO', 'MET', 'MMC', 'MS', 'MSCI', 'MTB', 'NDAQ',
+  'NTRS', 'PFG', 'PNC', 'PRU', 'PYPL', 'RF', 'RJF', 'SCHW', 'SPGI', 'STT',
+  'SYF', 'TFC', 'TROW', 'TRV', 'USB', 'V', 'WFC', 'WRB', 'WTW', 'XYZ',
+];
+
+// ── Health Care ───────────────────────────────────────────────────────────────
+const HLTH = [
+  'A', 'ABT', 'ABBV', 'ALGN', 'AMGN', 'BAX', 'BDX', 'BIIB', 'BMY', 'BSX',
+  'CAH', 'CI', 'CNC', 'COO', 'COR', 'CRL', 'CVS', 'DHR', 'DGX', 'DVA',
+  'DXCM', 'ELV', 'EW', 'GEHC', 'GILD', 'HCA', 'HSIC', 'HUM', 'IDXX', 'INCY',
+  'IQV', 'ISRG', 'JNJ', 'LH', 'LLY', 'MCK', 'MDT', 'MRK', 'MRNA', 'MTD',
+  'PFE', 'PODD', 'REGN', 'RMD', 'RVTY', 'SOLV', 'STE', 'SYK', 'TECH', 'TMO',
+  'UHS', 'VRTX', 'VTRS', 'ZBH', 'ZTS',
+];
+
+// ── Industrials ───────────────────────────────────────────────────────────────
+const INDU = [
+  'ADP', 'ALLE', 'AME', 'AOS', 'AXON', 'BA', 'BLDR', 'BR', 'CARR', 'CAT',
+  'CHRW', 'CMI', 'CPRT', 'CSX', 'DAL', 'DE', 'DOV', 'EFX', 'EME', 'EMR',
+  'EXPD', 'FAST', 'FDX', 'FIX', 'FTV', 'GD', 'GE', 'GEV', 'GNRC', 'GWW',
+  'HII', 'HON', 'HUBB', 'HWM', 'IEX', 'IR', 'ITW', 'J', 'JBHT', 'JCI',
+  'LDOS', 'LHX', 'LII', 'LMT', 'MAS', 'MMM', 'NDSN', 'NOC', 'NSC', 'ODFL',
+  'OTIS', 'PCAR', 'PAYX', 'PH', 'PNR', 'PWR', 'ROK', 'ROL', 'ROP', 'RTX',
+  'SNA', 'SW', 'SWK', 'TDG', 'TDY', 'TEL', 'TT', 'TXT', 'UAL', 'UNP',
+  'UPS', 'URI', 'VLTO', 'WAB',
+];
+
+// ── Information Technology ────────────────────────────────────────────────────
+const TECH = [
+  'AAPL', 'ACN', 'ADBE', 'ADI', 'ADSK', 'AKAM', 'AMD', 'AMAT', 'ANET', 'APP',
+  'APH', 'AVGO', 'CDNS', 'CIEN', 'COHR', 'CRM', 'CRWD', 'CSCO', 'CTSH',
+  'DDOG', 'DELL', 'FFIV', 'FICO', 'FSLR', 'FTNT', 'GEN', 'GDDY', 'GLW',
+  'HPE', 'HPQ', 'IBM', 'INTC', 'INTU', 'IT', 'JBL', 'KEYS', 'KLAC', 'LITE',
+  'LRCX', 'MCHP', 'MPWR', 'MSI', 'MU', 'MSFT', 'NTAP', 'NVDA', 'NXPI', 'ON',
+  'ORCL', 'PANW', 'PLTR', 'QCOM', 'SMCI', 'SNDK', 'SNPS', 'SWKS', 'TER',
+  'TRMB', 'TXN', 'TYL', 'VRSN', 'WDC',
+];
+
+// ── Materials ─────────────────────────────────────────────────────────────────
+const MATL = [
+  'ALB', 'AMCR', 'APD', 'AVY', 'BALL', 'CF', 'CRH', 'CTVA', 'DD', 'DOW',
+  'ECL', 'FCX', 'IFF', 'IP', 'LIN', 'LYB', 'MLM', 'MOS', 'NEM', 'NUE',
+  'PKG', 'PPG', 'STLD', 'VMC',
+];
+
+// ── Real Estate ───────────────────────────────────────────────────────────────
+const RLST = [
+  'AMT', 'ARE', 'AVB', 'BXP', 'CCI', 'CBRE', 'CSGP', 'CPT', 'DLR', 'DOC',
+  'EQIX', 'EQR', 'ESS', 'EXR', 'FRT', 'HST', 'INVH', 'IRM', 'KIM', 'MAA',
+  'O', 'PLD', 'PSA', 'REG', 'SBAC', 'UDR', 'VICI', 'VTR', 'WELL', 'WY',
+];
+
+// ── Utilities ─────────────────────────────────────────────────────────────────
+const UTIL = [
+  'AEE', 'AEP', 'AES', 'ATO', 'AWK', 'CEG', 'CMS', 'CNP', 'D', 'DTE',
+  'DUK', 'ED', 'EIX', 'ES', 'ETR', 'EVRG', 'EXC', 'FE', 'LNT', 'NEE',
+  'NI', 'NRG', 'PCG', 'PEG', 'PNW', 'PPL', 'SRE', 'SO', 'VST', 'WEC', 'XEL',
+];
+
+// ── Master list ───────────────────────────────────────────────────────────────
+export const TICKERS = [
+  ...COMM, ...DISC, ...STAP, ...ENRG, ...FINL,
+  ...HLTH, ...INDU, ...TECH, ...MATL, ...RLST, ...UTIL,
+];
+
+// ── Helper functions (keep in sync with server) ───────────────────────────────
+
 export function getDailySeed() {
-  const now = new Date();
+  const now   = new Date();
   const start = new Date(2024, 0, 1);
-  const diff = now - start;
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  return days;
+  return Math.floor((now - start) / (1000 * 60 * 60 * 24));
 }
 
-// Get the daily ticker
 export function getDailyTicker() {
-  const seed = getDailySeed();
-  return TICKERS[seed % TICKERS.length];
+  return TICKERS[getDailySeed() % TICKERS.length];
 }
 
-// Get a random ticker for endless mode
 export function getRandomTicker(exclude = []) {
   const available = TICKERS.filter(t => !exclude.includes(t));
   return available[Math.floor(Math.random() * available.length)];
 }
 
-// Check if a ticker is valid
 export function isValidTicker(ticker) {
   return TICKERS.includes(ticker.toUpperCase());
 }

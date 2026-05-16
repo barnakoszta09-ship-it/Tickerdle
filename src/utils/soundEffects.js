@@ -63,31 +63,10 @@ export function playSoundCorrect(volume = 0.3) {
   }
 }
 
-// Wrong answer sound - descending buzz
+// Wrong answer sound - low-pitched mirror of the keypress click
+// Same sine/short style as playSoundKeyPress but at 200 Hz instead of 600 Hz
 export function playSoundWrong(volume = 0.3) {
-  try {
-    const ctx = getAudioContext();
-    const now = ctx.currentTime;
-    
-    const frequencies = [440, 349.23]; // A4, F4
-    frequencies.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      
-      osc.frequency.value = freq;
-      osc.type = 'square';
-      
-      gain.gain.setValueAtTime(volume, now + i * 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.06 + 0.15);
-      
-      osc.start(now + i * 0.06);
-      osc.stop(now + i * 0.06 + 0.15);
-    });
-  } catch (e) {
-    console.log('Audio context not available');
-  }
+  playBeep(200, 80, volume);
 }
 
 // Tile flip sound - gentle pop
@@ -169,26 +148,7 @@ export function playSoundLose(volume = 0.3) {
   }
 }
 
-// Shake/error sound - buzz
+// Shake/error sound - same soft low tone as playSoundWrong
 export function playSoundError(volume = 0.25) {
-  try {
-    const ctx = getAudioContext();
-    const now = ctx.currentTime;
-    
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    
-    osc.frequency.value = 300;
-    osc.type = 'square';
-    
-    gain.gain.setValueAtTime(volume, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-    
-    osc.start(now);
-    osc.stop(now + 0.2);
-  } catch (e) {
-    console.log('Audio context not available');
-  }
+  playBeep(200, 80, volume);
 }

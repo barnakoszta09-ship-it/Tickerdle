@@ -35,16 +35,16 @@ export function evaluateGuess(guess, target) {
   return result;
 }
 
-export function generateShareText(guesses, evaluations, isDaily, puzzleNumber, won) {
-  const title = isDaily 
-    ? `Tickerdle #${puzzleNumber}` 
-    : 'Tickerdle (Endless)';
-  
-  const score = won 
-    ? `${guesses.length}/${MAXATTEMPTS}` 
+export function generateShareText(guesses, evaluations, isDaily, puzzleNumber, won, streak) {
+  const title = isDaily ? 'Tickerdle Daily' : 'Tickerdle Endless';
+
+  const score = won
+    ? `${guesses.length}/${MAXATTEMPTS}`
     : 'X/6';
 
-  const grid = evaluations.map(row => 
+  const streakLine = !isDaily && streak > 0 ? `🔥 Streak: ${streak}\n` : '';
+
+  const grid = evaluations.map(row =>
     row.map(state => {
       switch (state) {
         case 'correct': return '🟩';
@@ -54,5 +54,5 @@ export function generateShareText(guesses, evaluations, isDaily, puzzleNumber, w
     }).join('')
   ).join('\n');
 
-  return `${title} ${score}\n\n${grid}`;
+  return `${title} ${score}\n${streakLine}\n${grid}`;
 }

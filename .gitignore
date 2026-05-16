@@ -1,3 +1,15 @@
 node_modules/
 dist/
 .DS_Store
+
+# Local env files — never commit secrets
+.env
+.env.local
+.env.*.local
+server/.env
+
+# PM2 logs generated on the server
+server/logs/
+
+# Bug report data written on the server
+data/

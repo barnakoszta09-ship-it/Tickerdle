@@ -1,0 +1,53 @@
+# docker-compose.yml — optional Docker deployment for Tickerdle
+#
+# This file containerises only the Node.js backend.
+# The Vite frontend is still built with `npm run build` and served by
+# host-level nginx (see nginx/tickerdle.org.conf).
+#
+# Why not containerise nginx too?
+#   Let's Encrypt / Certbot integrates most cleanly with a host nginx.
+#   Adding a certbot container requires extra orchestration; for a single-VPS
+#   hobby project the PM2 approach (deploy.sh) is simpler and recommended.
+#
+# Usage on VPS:
+#   cp server/.env.example server/.env && vim server/.env
+#   docker compose up -d --build
+#
+# To check logs:
+#   docker compose logs -f backend
+
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: tickerdle-backend
+    restart: unless-stopped
+
+    # Bind to loopback only — nginx proxies from the same host.
+    # Never expose 3001 directly to the internet.
+    ports:
+      - "127.0.0.1:3001:3001"
+
+    env_file:
+      - ./server/.env
+
+    environment:
+      NODE_ENV: production
+
+    # Persist bug-report NDJSON file between container restarts.
+    # The path inside the container matches DATA_DIR in api.js.
+    volumes:
+      - tickerdle_data:/app/../data
+
+    # Healthcheck mirrors the /api/health endpoint
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout:  5s
+      retries:  3
+      start_period: 10s
+
+volumes:
+  tickerdle_data:
+    driver: local

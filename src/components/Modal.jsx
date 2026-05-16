@@ -4,46 +4,41 @@ import ShareButton from './ShareButton';
 import { saveScore } from '../utils/leaderboard';
 
 export default function Modal() {
-  const { gameOver, won, target, mode, streak, newEndlessGame, resetGame, puzzleNumber, guesses, playerName } = useGame();
+  const { gameOver, won, target, mode, streak, newEndlessGame, switchMode, puzzleNumber, guesses, playerName } = useGame();
   const [show, setShow] = useState(false);
   const hasScoreSaved = useRef(false);
 
   useEffect(() => {
     if (gameOver && !hasScoreSaved.current) {
-      // Save score to leaderboard
       let score = 0;
-      
       if (mode === 'daily') {
-        // For daily, score is based on guesses (6 = perfect, 1 = worst)
         score = won ? Math.max(1, 7 - guesses.length) : 0;
       } else if (mode === 'endless') {
-        // For endless, score is the streak
         score = streak;
       }
-      
       if (score > 0) {
         saveScore(mode, playerName, score);
       }
-      
       hasScoreSaved.current = true;
-      
-      // Delay modal to let animations complete
       const timer = setTimeout(() => setShow(true), 1500);
       return () => clearTimeout(timer);
     } else {
+      if (!gameOver) hasScoreSaved.current = false;
       setShow(false);
     }
   }, [gameOver, mode, won, guesses, streak, playerName]);
 
   if (!show) return null;
 
+  const handleContinueEndless = () => {
+    hasScoreSaved.current = false;
+    setShow(false);
+    switchMode('endless');
+  };
+
   const handlePlayAgain = () => {
     hasScoreSaved.current = false;
-    if (mode === 'endless') {
-      newEndlessGame();
-    } else {
-      resetGame();
-    }
+    newEndlessGame();
     setShow(false);
   };
 
@@ -63,6 +58,11 @@ export default function Modal() {
               <p className="text-terminal-muted mt-1">
                 {guesses.length === 1 ? 'First try!' : `Solved in ${guesses.length} guesses`}
               </p>
+              {mode === 'daily' && (
+                <p className="text-terminal-muted text-sm mt-2">
+                  Come back tomorrow for a new puzzle!
+                </p>
+              )}
             </>
           ) : (
             <>
@@ -75,17 +75,11 @@ export default function Modal() {
           )}
         </div>
 
-        {mode === 'daily' && (
+        {mode === 'endless' && streak > 0 && (
           <div className="mb-4 py-3 px-4 bg-terminal-bg rounded-lg">
             <p className="text-xs text-terminal-muted uppercase tracking-wider mb-1">
-              Daily #{puzzleNumber}
+              {won ? 'Streak' : 'Streak Lost'}
             </p>
-          </div>
-        )}
-
-        {mode === 'endless' && (
-          <div className="mb-4 py-3 px-4 bg-terminal-bg rounded-lg">
-            <p className="text-xs text-terminal-muted uppercase tracking-wider mb-1">Streak</p>
             <p className="text-2xl font-bold font-mono text-terminal-text">{streak}</p>
           </div>
         )}
@@ -93,19 +87,21 @@ export default function Modal() {
         <div className="flex flex-col gap-3">
           <ShareButton />
           
-          <button
-            onClick={handlePlayAgain}
-            className="px-6 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
-          >
-            {mode === 'daily' ? 'Play Again Tomorrow' : 'Play Again'}
-          </button>
-          
-          <button
-            onClick={() => setShow(false)}
-            className="text-terminal-muted hover:text-terminal-text text-sm transition-colors"
-          >
-            Close
-          </button>
+          {mode === 'daily' ? (
+            <button
+              onClick={handleContinueEndless}
+              className="px-6 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
+            >
+              Continue in Endless
+            </button>
+          ) : (
+            <button
+              onClick={handlePlayAgain}
+              className="px-6 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
+            >
+              Play Again
+            </button>
+          )}
         </div>
       </div>
     </div>
