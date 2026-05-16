@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!--
+    Tickerdle app icon — "T [candle] D" on a dark rounded-square background.
+    Used as the source for apple-touch-icon.png and favicon.svg.
+
+    Font metrics (Courier New 200 px):
+      char width ≈ 120 px, cap-height ≈ 136 px, baseline y=350
+      "T"  x=44   right-edge=164
+      "D"  x=348  right-edge=468
+      candle center = (164+348)/2 = 256 ✓
+  -->
+  <defs>
+    <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#15803d"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+    <clipPath id="roundClip">
+      <rect width="512" height="512" rx="112"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" fill="#0d0d0d" rx="112"/>
+
+  <!-- Very subtle inner glow at top -->
+  <ellipse cx="256" cy="-40" rx="300" ry="200"
+    fill="#22c55e" opacity="0.04" clip-path="url(#roundClip)"/>
+
+  <!-- "T" -->
+  <text x="44" y="350"
+    font-family="'Courier New', Courier, monospace"
+    font-weight="bold" font-size="200" fill="#e5e5e5">T</text>
+
+  <!-- "D" -->
+  <text x="348" y="350"
+    font-family="'Courier New', Courier, monospace"
+    font-weight="bold" font-size="200" fill="#e5e5e5">D</text>
+
+  <!-- Candlestick (centered at x=256, spanning cap-height of the letters) -->
+  <!-- Wick: runs from slightly above cap-top to slightly below baseline    -->
+  <line x1="256" y1="200" x2="256" y2="362"
+    stroke="#22c55e" stroke-width="14" stroke-linecap="round"/>
+  <!-- Body: ~65% of cap height -->
+  <rect x="222" y="222" width="68" height="104" rx="6"
+    fill="url(#bodyGrad)"/>
+</svg>
