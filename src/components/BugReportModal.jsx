@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
@@ -6,6 +6,14 @@ const API_BASE = import.meta.env.VITE_API_URL ?? '';
 export default function BugReportModal({ isOpen, onClose }) {
   const { mode } = useGame();
   const [description, setDescription] = useState('');
+
+  // Block game keyboard handler while modal is open (capture beats bubble)
+  useEffect(() => {
+    if (!isOpen) return;
+    const block = (e) => e.stopPropagation();
+    window.addEventListener('keydown', block, true);
+    return () => window.removeEventListener('keydown', block, true);
+  }, [isOpen]);
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
 
   const handleBackdropClick = (e) => {
@@ -46,6 +54,7 @@ export default function BugReportModal({ isOpen, onClose }) {
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
       onClick={handleBackdropClick}
+      onKeyDown={(e) => e.stopPropagation()}
     >
       <div className="bg-terminal-surface border border-terminal-border rounded-lg p-6 w-full max-w-md mx-4">
 
@@ -86,6 +95,7 @@ export default function BugReportModal({ isOpen, onClose }) {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
+                onKeyDown={(e) => e.stopPropagation()}
                 placeholder="What went wrong? Steps to reproduce..."
                 rows={4}
                 maxLength={2000}
