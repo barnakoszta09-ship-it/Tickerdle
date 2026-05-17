@@ -100,12 +100,12 @@ export default function SettingsModal({ isOpen, onClose }) {
             <label className="block text-xs uppercase text-terminal-muted mb-3">
               Background Chart
             </label>
-            <div className="flex gap-1 p-1 bg-terminal-bg border border-terminal-border rounded-lg w-fit">
+            <div className="flex gap-1 p-1 bg-terminal-bg border border-terminal-border rounded-lg w-full">
               {['line', 'candle'].map((style) => (
                 <button
                   key={style}
                   onClick={() => setChartStyle(style)}
-                  className={`px-4 py-1.5 rounded-md text-xs font-semibold font-mono transition-colors capitalize ${
+                  className={`flex-1 flex items-center justify-center px-4 py-1.5 rounded-md text-xs font-semibold font-mono transition-colors capitalize ${
                     chartStyle === style
                       ? 'bg-correct text-white'
                       : 'text-terminal-muted hover:text-terminal-text'
