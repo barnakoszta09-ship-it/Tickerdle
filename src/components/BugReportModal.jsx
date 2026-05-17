@@ -7,12 +7,20 @@ export default function BugReportModal({ isOpen, onClose }) {
   const { mode } = useGame();
   const [description, setDescription] = useState('');
 
-  useEffect(() => {
-    if (isOpen) document.body.setAttribute('data-modal-open', '1');
-    else document.body.removeAttribute('data-modal-open');
-    return () => document.body.removeAttribute('data-modal-open');
-  }, [isOpen]);
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
+
+  useEffect(() => {
+    if (!isOpen) return;
+    window.modalOpen = true;
+    // Focus textarea after modal renders
+    const t = setTimeout(() => {
+      document.querySelector('textarea')?.focus();
+    }, 50);
+    return () => {
+      window.modalOpen = false;
+      clearTimeout(t);
+    };
+  }, [isOpen]);
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) onClose();

@@ -74,9 +74,9 @@ export default function Keyboard({ hidden = false }) {
   // always reads the current value (no stale-closure issue).
   useEffect(() => {
     const handler = (e) => {
+      if (window.modalOpen) return;
       if (hidden) return; // block all keys while How to Play is visible
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (document.body.hasAttribute('data-modal-open')) return;
       const key = e.key.toUpperCase();
       if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z]$/.test(key)) {
         e.preventDefault();
