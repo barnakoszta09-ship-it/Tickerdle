@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useGame } from '../context/GameContext';
+import BugReportModal from './BugReportModal';
 
 export default function SettingsModal({ isOpen, onClose }) {
   const {
@@ -12,6 +13,7 @@ export default function SettingsModal({ isOpen, onClose }) {
 
   const [nameInput, setNameInput] = useState(playerName);
   const [hasChanged, setHasChanged] = useState(false);
+  const [showBugReport, setShowBugReport] = useState(false);
 
   const handleNameChange = (e) => {
     setNameInput(e.target.value);
@@ -143,20 +145,11 @@ export default function SettingsModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* ── About & Bug Report ──────────────────────────────────────────── */}
-          <div className="mb-6 flex gap-2">
-            <a
-              href="/about.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-terminal-border bg-terminal-bg hover:border-terminal-muted hover:bg-terminal-border text-terminal-text font-semibold text-sm transition-colors"
-            >
-              <span>ℹ️</span>
-              About
-            </a>
+          {/* ── Bug Report ──────────────────────────────────────────────────── */}
+          <div className="mb-6">
             <button
-              onClick={() => window.open('https://tickerdle.org/bugreport', '_blank')}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-terminal-border bg-terminal-bg hover:border-partial hover:bg-partial/10 text-terminal-text hover:text-partial font-semibold text-sm transition-colors"
+              onClick={() => setShowBugReport(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-terminal-border bg-terminal-bg hover:border-partial hover:bg-partial/10 text-terminal-text hover:text-partial font-semibold text-sm transition-colors"
             >
               <span>🐛</span>
               Report a Bug
@@ -173,6 +166,7 @@ export default function SettingsModal({ isOpen, onClose }) {
         </div>
       </div>
 
+      <BugReportModal isOpen={showBugReport} onClose={() => setShowBugReport(false)} />
     </>
   );
 }

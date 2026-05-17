@@ -1,54 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { useGame } from '../context/GameContext';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
 export default function BugReportModal({ isOpen, onClose }) {
   const { mode } = useGame();
-  const [charCount, setCharCount] = useState(0);
+  const [description, setDescription] = useState('');
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
-  const editableRef = useRef(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    setCharCount(0);
-    setStatus('idle');
-    setTimeout(() => {
-      if (editableRef.current) {
-        editableRef.current.innerText = '';
-        editableRef.current.focus();
-      }
-    }, 50);
-  }, [isOpen]);
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) onClose();
   };
 
   const handleClose = () => {
+    setDescription('');
     setStatus('idle');
-    setCharCount(0);
-    if (editableRef.current) editableRef.current.innerText = '';
     onClose();
   };
 
-  const handleInput = () => {
-    const text = editableRef.current?.innerText ?? '';
-    if (text.length > 2000) {
-      editableRef.current.innerText = text.slice(0, 2000);
-      // Move cursor to end
-      const range = document.createRange();
-      const sel = window.getSelection();
-      range.selectNodeContents(editableRef.current);
-      range.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-    setCharCount(Math.min(editableRef.current?.innerText.length ?? 0, 2000));
-  };
-
   const handleSubmit = async () => {
-    const trimmed = (editableRef.current?.innerText ?? '').trim();
+    const trimmed = description.trim();
     if (!trimmed) return;
 
     setStatus('sending');
@@ -93,6 +64,7 @@ export default function BugReportModal({ isOpen, onClose }) {
         </div>
 
         {status === 'success' ? (
+          /* ── Success state ── */
           <div className="text-center py-6 space-y-3">
             <div className="text-3xl">✅</div>
             <p className="text-terminal-text font-semibold">Thanks! We'll look into it.</p>
@@ -105,21 +77,22 @@ export default function BugReportModal({ isOpen, onClose }) {
             </button>
           </div>
         ) : (
+          /* ── Form state ── */
           <>
             <div className="mb-4">
               <label className="block text-xs uppercase text-terminal-muted mb-2">
                 Describe the issue
               </label>
-              <div
-                ref={editableRef}
-                contentEditable
-                suppressContentEditableWarning
-                onInput={handleInput}
-                data-placeholder="What went wrong? Steps to reproduce..."
-                className="w-full px-3 py-2 bg-terminal-bg border border-terminal-border text-terminal-text font-mono text-sm focus:outline-none focus:border-terminal-muted rounded min-h-[96px] empty:before:content-[attr(data-placeholder)] empty:before:text-terminal-muted"
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What went wrong? Steps to reproduce..."
+                rows={4}
+                maxLength={2000}
+                className="w-full px-3 py-2 bg-terminal-bg border border-terminal-border text-terminal-text font-mono text-sm resize-none focus:outline-none focus:border-terminal-muted rounded"
               />
               <p className="text-terminal-muted text-[10px] mt-1 text-right">
-                {charCount}/2000
+                {description.length}/2000
               </p>
             </div>
 
@@ -153,7 +126,7 @@ export default function BugReportModal({ isOpen, onClose }) {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={charCount === 0 || status === 'sending'}
+                disabled={!description.trim() || status === 'sending'}
                 className="flex-1 px-4 py-2 bg-correct hover:bg-correct/90 text-white font-semibold rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {status === 'sending' ? 'Sending…' : 'Send Report'}
