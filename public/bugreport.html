@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Report a Bug — Tickerdle</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #d4d4d4;
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .card {
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .logo a {
+      color: #22c55e;
+      text-decoration: none;
+      font-size: 1.5rem;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+    }
+
+    .logo a:hover { opacity: 0.8; }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #d4d4d4;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+      margin-bottom: 0.4rem;
+    }
+
+    textarea, select {
+      width: 100%;
+      background: #0a0a0a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      color: #d4d4d4;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.875rem;
+      padding: 0.6rem 0.75rem;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+    }
+
+    textarea { resize: none; height: 120px; }
+
+    textarea:focus, select:focus { border-color: #6b7280; }
+
+    .field { margin-bottom: 1.25rem; }
+
+    .char-count {
+      text-align: right;
+      font-size: 0.65rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      background: #22c55e;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.75rem;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    button[type="submit"]:hover { opacity: 0.9; }
+    button[type="submit"]:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .success {
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    .success .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .success p { color: #d4d4d4; margin-bottom: 0.5rem; }
+    .success small { color: #6b7280; font-size: 0.8rem; }
+
+    .success a {
+      display: inline-block;
+      margin-top: 1.25rem;
+      color: #22c55e;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+
+    .success a:hover { text-decoration: underline; }
+
+    .error-msg {
+      color: #f97316;
+      font-size: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo"><a href="/">T🕯CKERDLE</a></div>
+
+    <div id="form-section">
+      <h1>🐛 Report a Bug</h1>
+
+      <form id="bug-form">
+        <div class="field">
+          <label for="description">Describe the issue</label>
+          <textarea
+            id="description"
+            maxlength="2000"
+            placeholder="What went wrong? Steps to reproduce..."
+            oninput="document.getElementById('char-count').textContent = this.value.length + '/2000'"
+          ></textarea>
+          <div class="char-count"><span id="char-count">0/2000</span></div>
+        </div>
+
+        <div class="field">
+          <label for="mode">Game mode</label>
+          <select id="mode">
+            <option value="daily">Daily</option>
+            <option value="endless">Endless</option>
+            <option value="higher-lower">Higher or Lower</option>
+          </select>
+        </div>
+
+        <p class="error-msg" id="error-msg" style="display:none"></p>
+
+        <button type="submit" id="submit-btn">Send Report</button>
+      </form>
+    </div>
+
+    <div id="success-section" class="success" style="display:none">
+      <div class="icon">✅</div>
+      <p><strong>Thanks! We'll look into it.</strong></p>
+      <small>Your report has been received.</small><br />
+      <a href="/">← Back to Tickerdle</a>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('bug-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const errorMsg = document.getElementById('error-msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const description = document.getElementById('description').value.trim();
+      const mode = document.getElementById('mode').value;
+
+      if (!description) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+      errorMsg.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/bug-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description, mode, userAgent: navigator.userAgent }),
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        document.getElementById('form-section').style.display = 'none';
+        document.getElementById('success-section').style.display = 'block';
+      } catch {
+        errorMsg.textContent = 'Failed to send — please try again.';
+        errorMsg.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Report';
+      }
+    });
+  </script>
+</body>
+</html>
