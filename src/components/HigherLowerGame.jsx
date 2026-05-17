@@ -85,30 +85,35 @@ export default function HigherLowerGame() {
         {hlGameOver ? 'Game Over!' : message}
       </div>
 
-      <div className="flex gap-4">
-        {!hlGameOver ? (
-          <>
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex gap-4">
+          {!hlGameOver ? (
+            <>
+              <button
+                onClick={() => handleGuess('higher')}
+                className="px-8 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
+              >
+                Higher
+              </button>
+              <button
+                onClick={() => handleGuess('lower')}
+                className="px-8 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
+              >
+                Lower
+              </button>
+            </>
+          ) : (
             <button
-              onClick={() => handleGuess('higher')}
-              className="px-8 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
+              onClick={handlePlayAgain}
+              className="px-8 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
             >
-              Higher
+              Play Again
             </button>
-            <button
-              onClick={() => handleGuess('lower')}
-              className="px-8 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
-            >
-              Lower
-            </button>
-          </>
-        ) : (
-          <button
-            onClick={handlePlayAgain}
-            className="px-8 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
-          >
-            Play Again
-          </button>
-        )}
+          )}
+        </div>
+        <p className={`text-sm text-terminal-muted h-5 ${hlGameOver ? '' : 'invisible'}`}>
+          Final Streak: {hlStreak}
+        </p>
       </div>
 
       <div className="text-center mt-8">
