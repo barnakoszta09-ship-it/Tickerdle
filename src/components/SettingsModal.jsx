@@ -111,7 +111,22 @@ export default function SettingsModal({ isOpen, onClose }) {
                       : 'text-terminal-muted hover:text-terminal-text'
                   }`}
                 >
-                  {style === 'line' ? '📈 Line' : '🕯 Candle'}
+                  {style === 'line' ? '📈 Line' : (
+                    <span className="inline-flex items-center gap-1.5">
+                      <svg viewBox="0 0 18 12" width="18" height="12" aria-hidden="true" fill="currentColor">
+                        {/* candle 1 — bearish */}
+                        <line x1="3" y1="0" x2="3" y2="11" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+                        <rect x="1.5" y="2" width="3" height="6" rx="0.5"/>
+                        {/* candle 2 — bullish */}
+                        <line x1="9" y1="1" x2="9" y2="11" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+                        <rect x="7.5" y="3" width="3" height="7" rx="0.5"/>
+                        {/* candle 3 — bearish */}
+                        <line x1="15" y1="0" x2="15" y2="10" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+                        <rect x="13.5" y="1" width="3" height="5" rx="0.5"/>
+                      </svg>
+                      Candle
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
