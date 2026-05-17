@@ -48,10 +48,14 @@
       color: #22c55e;
       font-family: 'Courier New', monospace;
       font-size: 0.8rem;
+      font-weight: 700;
       padding: 0.15rem 0.5rem;
       border-radius: 4px;
       margin: 0 0.15rem;
     }
+    .badge-green  { background: #22c55e33; border-color: #22c55e88; color: #22c55e; }
+    .badge-yellow { background: #eab30833; border-color: #eab30888; color: #eab308; }
+    .badge-gray   { background: #52525233; border-color: #52525288; color: #a3a3a3; }
     .cta {
       display: inline-block;
       margin-top: 1.5rem;
@@ -92,9 +96,9 @@
       how close you are:
     </p>
     <p>
-      <span class="badge">Green</span> — correct letter, correct position.<br>
-      <span class="badge">Yellow</span> — correct letter, wrong position.<br>
-      <span class="badge">Gray</span> — letter not in the ticker at all.
+      <span class="badge badge-green">Green</span> — correct letter, correct position.<br>
+      <span class="badge badge-yellow">Yellow</span> — correct letter, wrong position.<br>
+      <span class="badge badge-gray">Gray</span> — letter not in the ticker at all.
     </p>
     <p>
       All tickers come from the <strong>S&amp;P 500</strong> — the index of the 500 largest
