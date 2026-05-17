@@ -4,43 +4,178 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#0d0d0d" />
+    <meta name="robots" content="index, follow" />
+    <meta name="application-name" content="Tickerdle" />
 
     <!-- ── SEO ──────────────────────────────────────────────────────────── -->
     <title>Tickerdle — Guess the S&P 500 Ticker</title>
     <meta name="description"
-      content="Guess the S&P 500 stock ticker symbol in 6 tries. A new puzzle every day — plus Endless and Higher/Lower modes." />
+      content="Guess the S&P 500 stock ticker symbol in 6 tries. A free daily stock market word game — plus Endless and Higher/Lower modes. Play Tickerdle now!" />
+    <link rel="canonical" href="https://tickerdle.org" />
 
     <!-- ── Open Graph (Facebook, Discord, WhatsApp, iMessage, Slack) ───── -->
-    <meta property="og:title"       content="Tickerdle" />
-    <meta property="og:description" content="Guess the S&P 500 stock ticker in 6 tries." />
+    <meta property="og:title"       content="Tickerdle — Guess the S&P 500 Ticker" />
+    <meta property="og:description" content="Guess the S&P 500 stock ticker in 6 tries. Free daily stock market word game." />
     <meta property="og:image"       content="https://tickerdle.org/og-image.png?v=3" />
     <meta property="og:image:width"  content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt"    content="Tickerdle — Guess the S&P 500 stock ticker in 6 tries" />
     <meta property="og:url"         content="https://tickerdle.org" />
     <meta property="og:type"        content="website" />
     <meta property="og:site_name"   content="Tickerdle" />
+    <meta property="og:locale"      content="en_US" />
 
     <!-- ── Twitter / X ──────────────────────────────────────────────────── -->
     <meta name="twitter:card"        content="summary_large_image" />
-    <meta name="twitter:title"       content="Tickerdle" />
-    <meta name="twitter:description" content="Guess the S&P 500 stock ticker in 6 tries." />
+    <meta name="twitter:title"       content="Tickerdle — Guess the S&P 500 Ticker" />
+    <meta name="twitter:description" content="Guess the S&P 500 stock ticker in 6 tries. Free daily stock market word game." />
     <meta name="twitter:image"       content="https://tickerdle.org/og-image.png?v=3" />
+    <meta name="twitter:image:alt"   content="Tickerdle — Guess the S&P 500 stock ticker in 6 tries" />
+
+    <!-- ── PWA Manifest ─────────────────────────────────────────────────── -->
+    <link rel="manifest" href="/manifest.json" />
 
     <!-- ── Favicon ──────────────────────────────────────────────────────── -->
-    <!-- SVG favicon (Chrome, Firefox, Edge — scales perfectly at any size) -->
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-    <!-- PNG fallback for browsers that don't support SVG favicons (Safari) -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-    <!-- iOS home screen icon -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <!-- ── Fonts ─────────────────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- ── Schema: WebApplication ───────────────────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Tickerdle",
+      "url": "https://tickerdle.org",
+      "description": "Tickerdle is a free daily word game where you guess the S&P 500 stock ticker symbol in 6 tries. Features daily, endless, and higher/lower game modes.",
+      "applicationCategory": "Game",
+      "applicationSubCategory": "Word Game",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "genre": "Word Game",
+      "inLanguage": "en",
+      "image": "https://tickerdle.org/og-image.png",
+      "screenshot": "https://tickerdle.org/og-image.png",
+      "author": {
+        "@type": "Person",
+        "name": "GamesByBarni"
+      }
+    }
+    </script>
+
+    <!-- ── Schema: Game ─────────────────────────────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Game",
+      "name": "Tickerdle",
+      "description": "A daily stock market word game. Guess the S&P 500 stock ticker symbol in 6 tries. Similar to Wordle but for stock tickers — great for investors and finance enthusiasts.",
+      "url": "https://tickerdle.org",
+      "image": "https://tickerdle.org/og-image.png",
+      "genre": ["Word Game", "Puzzle", "Trivia", "Finance"],
+      "keywords": "stock ticker game, S&P 500 wordle, guess the stock symbol, daily stock market game, finance word game, ticker wordle",
+      "numberOfPlayers": {
+        "@type": "QuantitativeValue",
+        "minValue": 1,
+        "maxValue": 1
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
+    <!-- ── Schema: FAQPage ──────────────────────────────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Tickerdle?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tickerdle is a free daily word game where you guess the S&P 500 stock ticker symbol in 6 tries. It's like Wordle, but for stock market tickers. A new puzzle is released every day at midnight."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do you play Tickerdle?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Type any valid S&P 500 ticker symbol and press Enter. After each guess, the tiles change color: green means the letter is in the correct position, yellow means the letter is in the ticker but in the wrong spot, and gray means the letter is not in the ticker at all. You have 6 tries to guess the daily ticker."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Tickerdle free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, Tickerdle is completely free to play. No sign-up, no subscription, no ads. Just visit tickerdle.org and start playing."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What stock tickers are used in Tickerdle?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "All ticker symbols in Tickerdle are from S&P 500 companies — the 500 largest publicly traded companies in the United States, such as AAPL (Apple), MSFT (Microsoft), AMZN (Amazon), and GOOGL (Alphabet)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Tickerdle have different game modes?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! Tickerdle has three modes: Daily (one new ticker per day), Endless (keep guessing as many as you want), and Higher/Lower (guess which company has the larger market cap)."
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- ── Crawlable fallback for search engines ─────────────────────────── -->
+    <noscript>
+      <style>
+        body { background: #0d0d0d; color: #e5e5e5; font-family: monospace; max-width: 640px; margin: 0 auto; padding: 2rem; }
+        h1 { color: #22c55e; font-size: 2rem; }
+        a { color: #22c55e; }
+        p { line-height: 1.7; color: #a3a3a3; }
+      </style>
+      <h1>Tickerdle — Guess the S&amp;P 500 Ticker</h1>
+      <p>
+        Tickerdle is a free daily stock market word game. Guess the S&amp;P 500 stock ticker symbol
+        in 6 tries — the S&amp;P 500 Wordle for investors and finance enthusiasts.
+        Each day brings a new ticker from the 500 largest U.S. companies.
+        Type a valid ticker symbol, hit Enter, and use the color clues to narrow it down.
+        Green = correct position. Yellow = wrong position. Gray = not in the ticker.
+      </p>
+      <p>
+        Features: <strong>Daily mode</strong> (one new puzzle per day),
+        <strong>Endless mode</strong> (unlimited puzzles), and
+        <strong>Higher/Lower mode</strong> (guess which company has the bigger market cap).
+      </p>
+      <p>
+        JavaScript is required to play. <a href="https://tickerdle.org">Enable JavaScript</a> to load the game.
+      </p>
+    </noscript>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

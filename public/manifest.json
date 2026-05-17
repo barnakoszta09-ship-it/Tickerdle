@@ -1,0 +1,38 @@
+{
+  "name": "Tickerdle",
+  "short_name": "Tickerdle",
+  "description": "Guess the S&P 500 stock ticker in 6 tries. A free daily stock market word game.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0d0d0d",
+  "background_color": "#0d0d0d",
+  "lang": "en",
+  "categories": ["games", "finance", "education"],
+  "icons": [
+    {
+      "src": "/favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "label": "Tickerdle game board"
+    }
+  ]
+}
