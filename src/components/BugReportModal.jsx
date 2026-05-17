@@ -11,15 +11,10 @@ export default function BugReportModal({ isOpen, onClose }) {
 
   useEffect(() => {
     if (!isOpen) return;
-    window.modalOpen = true;
-    // Focus textarea after modal renders
     const t = setTimeout(() => {
       document.querySelector('textarea')?.focus();
     }, 50);
-    return () => {
-      window.modalOpen = false;
-      clearTimeout(t);
-    };
+    return () => clearTimeout(t);
   }, [isOpen]);
 
   const handleBackdropClick = (e) => {
