@@ -79,13 +79,15 @@ export default function HigherLowerGame() {
         </div>
       </div>
 
-      <div className={`text-lg font-bold h-7 ${message ? (message.includes('Correct') ? 'text-correct' : 'text-partial') : 'invisible'}`}>
-        {message}
+      <div className={`text-lg font-bold h-7 ${
+        hlGameOver ? 'text-partial' : message ? (message.includes('Correct') ? 'text-correct' : 'text-partial') : 'invisible'
+      }`}>
+        {hlGameOver ? 'Game Over!' : message}
       </div>
 
-      <div className="min-h-20">
-        {!hlGameOver && (
-          <div className="flex gap-4">
+      <div className="flex gap-4">
+        {!hlGameOver ? (
+          <>
             <button
               onClick={() => handleGuess('higher')}
               className="px-8 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
@@ -98,20 +100,14 @@ export default function HigherLowerGame() {
             >
               Lower
             </button>
-          </div>
-        )}
-
-        {hlGameOver && (
-          <div className="text-center">
-            <p className="text-lg text-partial font-bold">Game Over!</p>
-            <p className="text-terminal-muted mt-2">Final Streak: {hlStreak}</p>
-            <button
-              onClick={handlePlayAgain}
-              className="mt-4 px-8 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
-            >
-              Play Again
-            </button>
-          </div>
+          </>
+        ) : (
+          <button
+            onClick={handlePlayAgain}
+            className="px-8 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
+          >
+            Play Again
+          </button>
         )}
       </div>
 
