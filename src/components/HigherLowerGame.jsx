@@ -57,29 +57,39 @@ export default function HigherLowerGame() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-8 py-8">
+    <div className="flex flex-col items-center justify-center gap-4 py-4 w-full">
       <div className="text-center">
-        <p className="text-xs uppercase text-terminal-muted mb-4">Current Market Cap</p>
-        <div className="text-4xl font-bold font-mono text-terminal-text mb-2">
+        <p className="text-xs uppercase text-terminal-muted mb-2">Current Market Cap</p>
+        <div className="text-4xl font-bold font-mono text-terminal-text mb-1">
           {hlCurrent.symbol}
         </div>
-        <p className="text-lg text-terminal-muted">{hlCurrent.name}</p>
-        <div className="text-2xl font-bold text-correct mt-2">
+        <p className="text-base text-terminal-muted">{hlCurrent.name}</p>
+        <div className="text-2xl font-bold text-correct mt-1">
           ${hlCurrent.marketCap}B
         </div>
       </div>
 
-      <div className="text-2xl text-terminal-muted">↓</div>
+      <div className="text-xl text-terminal-muted">↓</div>
 
       <div className="text-center">
-        <p className="text-xs uppercase text-terminal-muted mb-4">Next Company</p>
-        <div className="text-4xl font-bold font-mono text-terminal-text mb-2">
+        <p className="text-xs uppercase text-terminal-muted mb-2">Next Company</p>
+        <div className="text-4xl font-bold font-mono text-terminal-text mb-1">
           {hlNext.symbol}
         </div>
-        <p className="text-lg text-terminal-muted">{hlNext.name}</p>
-        <div className={`text-2xl font-bold mt-2 ${isCorrect ? 'text-correct' : isWrong ? 'text-partial' : 'text-terminal-text'}`}>
+        <p className="text-base text-terminal-muted">{hlNext.name}</p>
+        <div className={`text-2xl font-bold mt-1 ${isCorrect ? 'text-correct' : isWrong ? 'text-partial' : 'text-terminal-text'}`}>
           {shouldShowMarketCap ? `$${hlNext.marketCap}B` : '?'}
         </div>
+      </div>
+
+      {/* Streak — always visible, pops on correct answer */}
+      <div className="flex flex-col items-center">
+        <p className="text-[10px] uppercase tracking-widest text-terminal-muted mb-0.5">
+          {hlGameOver ? 'Final Streak' : 'Streak'}
+        </p>
+        <p className={`text-5xl font-bold font-mono text-correct transition-transform duration-150 ${streakPop ? 'scale-125' : 'scale-100'}`}>
+          {hlStreak > 0 && !hlGameOver ? '🔥' : ''}{hlStreak}
+        </p>
       </div>
 
       <div className={`text-lg font-bold h-7 ${
@@ -88,42 +98,30 @@ export default function HigherLowerGame() {
         {hlGameOver ? 'Game Over!' : message}
       </div>
 
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex gap-4">
-          {!hlGameOver ? (
-            <>
-              <button
-                onClick={() => handleGuess('higher')}
-                className="px-8 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
-              >
-                Higher
-              </button>
-              <button
-                onClick={() => handleGuess('lower')}
-                className="px-8 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
-              >
-                Lower
-              </button>
-            </>
-          ) : (
+      <div className="flex gap-4">
+        {!hlGameOver ? (
+          <>
             <button
-              onClick={handlePlayAgain}
-              className="px-8 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
+              onClick={() => handleGuess('higher')}
+              className="px-8 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
             >
-              Play Again
+              Higher
             </button>
-          )}
-        </div>
-        <div className="flex flex-col items-center mt-2">
-          <p className="text-[10px] uppercase tracking-widest text-terminal-muted mb-1">
-            {hlGameOver ? 'Final Streak' : 'Streak'}
-          </p>
-          <p
-            className={`text-5xl font-bold font-mono text-correct transition-transform duration-150 ${streakPop ? 'scale-125' : 'scale-100'}`}
+            <button
+              onClick={() => handleGuess('lower')}
+              className="px-8 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
+            >
+              Lower
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={handlePlayAgain}
+            className="px-8 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
           >
-            {hlStreak > 0 && !hlGameOver ? '🔥' : ''}{hlStreak}
-          </p>
-        </div>
+            Play Again
+          </button>
+        )}
       </div>
     </div>
   );
