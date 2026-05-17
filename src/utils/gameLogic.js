@@ -42,7 +42,7 @@ export function generateShareText(guesses, evaluations, isDaily, puzzleNumber, w
     ? `${guesses.length}/${MAXATTEMPTS}`
     : 'X/6';
 
-  const streakLine = !isDaily && streak > 0 ? `🔥 Streak: ${streak}\n` : '';
+  const streakLine = streak > 0 ? `🔥 Streak: ${streak}\n` : '';
 
   const grid = evaluations.map(row =>
     row.map(state => {
