@@ -76,7 +76,7 @@ export default function Keyboard({ hidden = false }) {
     const handler = (e) => {
       if (hidden) return; // block all keys while How to Play is visible
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const tag = document.activeElement?.tagName;
+      const tag = (e.target)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       const key = e.key.toUpperCase();
       if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z]$/.test(key)) {
