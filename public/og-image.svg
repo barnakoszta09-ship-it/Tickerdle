@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+
+  <defs>
+    <linearGradient id="chartArea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#22c55e" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="candleBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#16a34a"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ── Background ──────────────────────────────────────────────────────── -->
+  <rect width="1200" height="630" fill="#0d0d0d"/>
+
+  <!-- Subtle 1px border -->
+  <rect x="0.5" y="0.5" width="1199" height="629"
+    fill="none" stroke="#1e1e1e" stroke-width="1"/>
+
+  <!-- ── Decorative stock-chart watermark ──────────────────────────────── -->
+  <!-- Area fill -->
+  <path d="
+    M-10,560
+    C 60,540  100,510  160,480
+    C 220,450  260,490  320,460
+    C 380,430  420,390  490,360
+    C 550,335  590,370  660,340
+    C 720,315  760,280  830,250
+    C 890,225  930,258  1000,220
+    C 1060,188 1110,160 1210,120
+    L1210,640 L-10,640 Z"
+    fill="url(#chartArea)"/>
+
+  <!-- Chart line -->
+  <path d="
+    M-10,560
+    C 60,540  100,510  160,480
+    C 220,450  260,490  320,460
+    C 380,430  420,390  490,360
+    C 550,335  590,370  660,340
+    C 720,315  760,280  830,250
+    C 890,225  930,258  1000,220
+    C 1060,188 1110,160 1210,120"
+    fill="none"
+    stroke="#22c55e" stroke-width="2.5"
+    stroke-opacity="0.20"
+    stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- ── Logo: T [candlestick] CKERDLE ──────────────────────────────────
+       Font metrics (Courier New 108 px, letter-spacing 11 px):
+         advance per char = ~65 px glyph + 11 px spacing = 76 px
+         "T"       x=264  →  340
+         candle    x=340  center=372.5  →  416
+         "CKERDLE" x=416  →  937
+         Total span 673 px, centered at x=600 ✓
+         Cap-height ≈ 73 px → baseline 345, cap-top 272
+  ──────────────────────────────────────────────────────────────────────── -->
+
+  <!-- "T" -->
+  <text x="264" y="345"
+    font-family="'Courier New', Courier, monospace"
+    font-weight="bold" font-size="108" fill="#e5e5e5"
+    letter-spacing="11">T</text>
+
+  <!-- Candlestick replacing "I" -->
+  <!--   wick  : center x=372, full cap-height span + small overrun        -->
+  <!--   body  : 68 % of cap-height, center-weighted, 44 px wide           -->
+  <line x1="372" y1="263" x2="372" y2="349"
+    stroke="#22c55e" stroke-width="4.5" stroke-linecap="round"/>
+  <rect x="350" y="278" width="44" height="52" rx="3"
+    fill="url(#candleBody)"/>
+
+  <!-- "CKERDLE" -->
+  <text x="416" y="345"
+    font-family="'Courier New', Courier, monospace"
+    font-weight="bold" font-size="108" fill="#e5e5e5"
+    letter-spacing="11">CKERDLE</text>
+
+  <!-- ── Tagline ────────────────────────────────────────────────────────── -->
+  <text x="600" y="460"
+    font-family="'Courier New', Courier, monospace"
+    font-size="54" fill="#ffffff"
+    font-weight="bold"
+    letter-spacing="2" text-anchor="middle">Guess the ticker in 6 tries.</text>
+
+  <!-- ── Domain ─────────────────────────────────────────────────────────── -->
+  <text x="600" y="560"
+    font-family="'Courier New', Courier, monospace"
+    font-size="44" fill="#22c55e"
+    font-weight="bold"
+    letter-spacing="4" text-anchor="middle">tickerdle.org</text>
+
+</svg>

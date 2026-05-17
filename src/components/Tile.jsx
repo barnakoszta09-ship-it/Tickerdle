@@ -10,8 +10,26 @@ const stateStyles = {
   wrong: 'border-wrong bg-wrong',
 };
 
-export default function Tile({ letter, state = 'empty', delay = 0, shouldAnimate = false }) {
+/*
+ * Tile size is driven by CSS custom properties so that @media (max-height)
+ * rules in index.css can shrink tiles on short screens without touching
+ * the keyboard size at all.
+ *
+ * Variable names: --tile-size-2  --tile-size-3  --tile-size-4  --tile-size-5
+ * Font size:      --tile-font
+ */
+function getTileSizeStyle(tickerLength) {
+  const len = Math.min(Math.max(tickerLength, 2), 5); // clamp to [2, 5]
+  return {
+    width:    `var(--tile-size-${len})`,
+    height:   `var(--tile-size-${len})`,
+    fontSize: 'var(--tile-font)',
+  };
+}
+
+export default function Tile({ letter, state = 'empty', delay = 0, shouldAnimate = false, tickerLength = 4 }) {
   const { soundEnabled, soundVolume } = useGame();
+  const sizeStyle = getTileSizeStyle(tickerLength);
   const [revealed, setRevealed] = useState(!shouldAnimate);
   const [isFlipping, setIsFlipping] = useState(false);
 
@@ -38,11 +56,11 @@ export default function Tile({ letter, state = 'empty', delay = 0, shouldAnimate
 
   return (
     <div
+      style={sizeStyle}
       className={`
-        w-14 h-14 sm:w-16 sm:h-16
         flex items-center justify-center
         border-2 rounded-md
-        font-mono font-bold text-2xl sm:text-3xl
+        font-mono font-bold
         transition-all duration-200
         ${stateStyles[currentState]}
         ${isFlipping ? 'tile-flip flipping' : ''}

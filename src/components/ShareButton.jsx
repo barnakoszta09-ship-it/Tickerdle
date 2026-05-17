@@ -3,11 +3,11 @@ import { useGame } from '../context/GameContext';
 import { generateShareText } from '../utils/gameLogic';
 
 export default function ShareButton() {
-  const { guesses, evaluations, mode, puzzleNumber, won } = useGame();
+  const { guesses, evaluations, mode, puzzleNumber, won, streak } = useGame();
   const [showModal, setShowModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const text = generateShareText(guesses, evaluations, mode === 'daily', puzzleNumber, won);
+  const text = generateShareText(guesses, evaluations, mode === 'daily', puzzleNumber, won, streak);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(text);

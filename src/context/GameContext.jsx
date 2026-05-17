@@ -14,13 +14,15 @@ function getInitialState(mode = 'daily') {
   const soundEnabled = localStorage.getItem('tickerdle_soundEnabled') !== 'false';
   const rawVolume = parseFloat(localStorage.getItem('tickerdle_soundVolume'));
   const soundVolume = isNaN(rawVolume) ? 0.5 : rawVolume;
-  const soundSettings = { playerName, soundEnabled, soundVolume };
+  const chartStyle    = localStorage.getItem('tickerdle_chartStyle') || 'line';
+  const showHowToPlay = localStorage.getItem('tickerdle_showHTP') !== 'false';
+  const soundSettings = { playerName, soundEnabled, soundVolume, chartStyle, showHowToPlay };
 
   if (saved) {
     const parsed = JSON.parse(saved);
     const currentSeed = getDailySeed();
 
-    if (mode === 'daily' && parsed.dailySeed !== currentSeed) {
+    if (mode === 'daily' && parsed.mode === 'daily' && parsed.dailySeed !== currentSeed) {
       return { ...createFreshState('daily'), ...soundSettings };
     }
 
@@ -100,7 +102,7 @@ function gameReducer(state, action) {
     case 'SUBMITGUESS': {
       const guess = state.currentGuess.toUpperCase();
       const targetLength = state.target ? state.target.length : WORDLENGTH;
-      
+
       if (state.gameOver || guess.length !== targetLength) {
         return state;
       }
@@ -161,11 +163,11 @@ function gameReducer(state, action) {
 
     case 'MAKE_HL_GUESS': {
       if (state.hlGameOver) return state;
-      
+
       const guess = action.guess;
       const isCorrect = (guess === 'higher' && state.hlNext.marketCap > state.hlCurrent.marketCap) ||
                         (guess === 'lower' && state.hlNext.marketCap < state.hlCurrent.marketCap);
-      
+
       if (isCorrect) {
         const newCurrent = state.hlNext;
         const pair = getRandomHLPair(newCurrent.symbol);
@@ -215,6 +217,20 @@ function gameReducer(state, action) {
       };
     }
 
+    case 'SET_CHART_STYLE': {
+      return {
+        ...state,
+        chartStyle: action.chartStyle,
+      };
+    }
+
+    case 'SET_SHOW_HTP': {
+      return {
+        ...state,
+        showHowToPlay: action.showHowToPlay,
+      };
+    }
+
     default:
       return state;
   }
@@ -223,12 +239,10 @@ function gameReducer(state, action) {
 export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, 'daily', getInitialState);
 
-  // Save state to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGEKEY, JSON.stringify(state));
   }, [state]);
 
-  // Clear shake after animation
   useEffect(() => {
     if (state.shake) {
       const timer = setTimeout(() => dispatch({ type: 'CLEARSHAKE' }), 500);
@@ -236,7 +250,6 @@ export function GameProvider({ children }) {
     }
   }, [state.shake]);
 
-  // Clear reveal after animation
   useEffect(() => {
     if (state.revealRow !== null) {
       const timer = setTimeout(() => dispatch({ type: 'CLEARREVEAL' }), 2000);
@@ -287,6 +300,16 @@ export function GameProvider({ children }) {
     dispatch({ type: 'SET_SOUND_VOLUME', soundVolume: volume });
   }, []);
 
+  const setChartStyle = useCallback((style) => {
+    localStorage.setItem('tickerdle_chartStyle', style);
+    dispatch({ type: 'SET_CHART_STYLE', chartStyle: style });
+  }, []);
+
+  const setShowHowToPlay = useCallback((value) => {
+    localStorage.setItem('tickerdle_showHTP', value);
+    dispatch({ type: 'SET_SHOW_HTP', showHowToPlay: value });
+  }, []);
+
   useEffect(() => {
     if (state.hlGuessed !== null) {
       const timer = setTimeout(() => dispatch({ type: 'CLEAR_HL_GUESS' }), 1000);
@@ -306,6 +329,8 @@ export function GameProvider({ children }) {
     setPlayerName,
     setSoundEnabled,
     setSoundVolume,
+    setChartStyle,
+    setShowHowToPlay,
     puzzleNumber: getDailySeed(),
   };
 

@@ -57,6 +57,7 @@ export default function GameBoard() {
           state={state}
           delay={j * 150}
           shouldAnimate={revealRow === i}
+          tickerLength={tickerLength}
         />
       );
     }
@@ -67,10 +68,11 @@ export default function GameBoard() {
       <div
         key={i}
         className={`
-          flex gap-1.5
+          flex
           ${isCurrentRow && shake ? 'row-shake' : ''}
           ${isWinRow ? 'win-bounce' : ''}
         `}
+        style={{ gap: 'var(--row-gap, 6px)' }}
       >
         {tiles}
       </div>
@@ -78,7 +80,12 @@ export default function GameBoard() {
   }
 
   return (
-    <div className="flex flex-col gap-1.5 items-center py-4">
+    // No internal padding — the parent flex container centres this block
+    // vertically in the available space above the fixed keyboard.
+    <div
+      className="flex flex-col items-center"
+      style={{ gap: 'var(--row-gap, 6px)' }}
+    >
       {rows}
     </div>
   );

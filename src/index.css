@@ -8,7 +8,48 @@
 
 body {
   @apply bg-terminal-bg text-terminal-text font-sans;
+  overflow: hidden;          /* snap container handles scrolling */
   overscroll-behavior: none;
+}
+
+/* ── Tile sizing via CSS custom properties ─────────────────────────────────
+   JS (ResizeObserver on Keyboard) overrides --keyboard-height at runtime.
+   Height media queries shrink tiles on short screens — never the keyboard.
+   ────────────────────────────────────────────────────────────────────────── */
+:root {
+  --tile-size-2: 88px;
+  --tile-size-3: 72px;
+  --tile-size-4: 64px;
+  --tile-size-5: 52px;
+  --tile-font: 1.75rem;
+  --row-gap: 6px;
+  --keyboard-height: 176px; /* JS overrides this precisely */
+}
+
+/* Short screens — iPhone SE (667 px), Galaxy S8+ (740 px), etc.
+   Matches the 760 px compact-header threshold in Header.jsx so tiles also
+   shrink in sync with the tighter header on these devices.               */
+@media screen and (max-height: 760px) {
+  :root {
+    --tile-size-2: 70px;
+    --tile-size-3: 58px;
+    --tile-size-4: 52px;
+    --tile-size-5: 42px;
+    --tile-font: 1.25rem;
+    --row-gap: 5px;
+  }
+}
+
+/* Very short screens */
+@media screen and (max-height: 620px) {
+  :root {
+    --tile-size-2: 58px;
+    --tile-size-3: 46px;
+    --tile-size-4: 42px;
+    --tile-size-5: 34px;
+    --tile-font: 1.125rem;
+    --row-gap: 4px;
+  }
 }
 
 .tile-flip {
