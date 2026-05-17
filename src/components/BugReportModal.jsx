@@ -7,12 +7,10 @@ export default function BugReportModal({ isOpen, onClose }) {
   const { mode } = useGame();
   const [description, setDescription] = useState('');
 
-  // Block game keyboard handler while modal is open (capture beats bubble)
   useEffect(() => {
-    if (!isOpen) return;
-    const block = (e) => e.stopPropagation();
-    window.addEventListener('keydown', block, true);
-    return () => window.removeEventListener('keydown', block, true);
+    if (isOpen) document.body.setAttribute('data-modal-open', '1');
+    else document.body.removeAttribute('data-modal-open');
+    return () => document.body.removeAttribute('data-modal-open');
   }, [isOpen]);
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
 
