@@ -8,6 +8,25 @@ const GameContext = createContext();
 
 const STORAGEKEY = 'tickerdlestate';
 
+function todayDateStr() {
+  return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+}
+
+// Loads the daily streak from localStorage, resetting it if the player
+// missed a calendar day (lastWonDate is more than 1 day ago).
+function loadDailyStreak() {
+  const saved      = parseInt(localStorage.getItem('tickerdle_dailyStreak') || '0', 10);
+  const lastWon    = localStorage.getItem('tickerdle_lastWonDate') || null;
+  const streak     = isNaN(saved) ? 0 : saved;
+  if (!lastWon) return streak;
+  const diffDays   = Math.round((Date.parse(todayDateStr()) - Date.parse(lastWon)) / 86400000);
+  if (diffDays > 1) {
+    localStorage.setItem('tickerdle_dailyStreak', '0');
+    return 0;
+  }
+  return streak;
+}
+
 function getInitialState(mode = 'daily') {
   const saved = localStorage.getItem(STORAGEKEY);
   const playerName    = localStorage.getItem('tickerdle_playerName') || 'Anonymous';
@@ -23,10 +42,8 @@ function getInitialState(mode = 'daily') {
     const currentSeed = getDailySeed();
 
     if (mode === 'daily' && parsed.mode === 'daily' && parsed.dailySeed !== currentSeed) {
-      // New day — carry streak only if the player won exactly yesterday
-      const wonYesterday = parsed.won && parsed.dailySeed === currentSeed - 1;
-      const carriedStreak = wonYesterday ? parsed.streak : 0;
-      return { ...createFreshState('daily'), ...soundSettings, streak: carriedStreak };
+      // New calendar day — start fresh. Daily streak lives in its own localStorage keys.
+      return { ...createFreshState('daily'), ...soundSettings };
     }
 
     if (mode === 'endless' && parsed.mode === 'daily' && parsed.gameOver) {
@@ -34,7 +51,7 @@ function getInitialState(mode = 'daily') {
     }
 
     if (parsed.mode === mode) {
-      return { ...parsed, ...soundSettings };
+      return { ...parsed, ...soundSettings, scoreSubmitted: false };
     }
 
     if (parsed.mode === 'daily' && mode === 'endless' && parsed.endlessState) {
@@ -76,6 +93,7 @@ function createFreshState(mode) {
     revealRow: null,
     dailySeed: mode === 'daily' ? getDailySeed() : null,
     streak: 0,
+    dailyStreak: mode === 'daily' ? loadDailyStreak() : 0,
     usedTickers: mode === 'endless' ? [target] : [],
     scoreSubmitted: false,
   };
@@ -130,7 +148,9 @@ function gameReducer(state, action) {
         gameOver,
         won,
         revealRow: newGuesses.length - 1,
-        streak: won ? state.streak + 1 : state.streak,
+        // Daily streak is managed by a provider effect (localStorage-based).
+        // Only increment streak here for endless mode.
+        streak: state.mode === 'endless' && won ? state.streak + 1 : state.streak,
       };
     }
 
@@ -201,6 +221,10 @@ function gameReducer(state, action) {
       };
     }
 
+    case 'SET_DAILY_STREAK': {
+      return { ...state, dailyStreak: action.dailyStreak };
+    }
+
     case 'SET_SCORE_SUBMITTED': {
       return { ...state, scoreSubmitted: true };
     }
@@ -239,6 +263,18 @@ export function GameProvider({ children }) {
   useEffect(() => {
     localStorage.setItem(STORAGEKEY, JSON.stringify(state));
   }, [state]);
+
+  // Daily streak — runs only on daily wins, never touches endless/HL.
+  useEffect(() => {
+    if (state.mode !== 'daily' || !state.gameOver || !state.won) return;
+    const today = todayDateStr();
+    const lastWon = localStorage.getItem('tickerdle_lastWonDate');
+    if (lastWon === today) return; // already counted today's win
+    const newStreak = state.dailyStreak + 1;
+    localStorage.setItem('tickerdle_dailyStreak', String(newStreak));
+    localStorage.setItem('tickerdle_lastWonDate', today);
+    dispatch({ type: 'SET_DAILY_STREAK', dailyStreak: newStreak });
+  }, [state.gameOver, state.won, state.mode]);
 
   useEffect(() => {
     if (state.shake) {
@@ -319,7 +355,7 @@ export function GameProvider({ children }) {
   }, [state.hlGuessed]);
 
   const value = {
-    ...state,
+    ...state, // includes dailyStreak from state
     playerId,
     addLetter,
     deleteLetter,
