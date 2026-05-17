@@ -78,17 +78,17 @@
     letter-spacing="11">CKERDLE</text>
 
   <!-- ── Tagline ────────────────────────────────────────────────────────── -->
-  <text x="600" y="450"
+  <text x="600" y="460"
     font-family="'Courier New', Courier, monospace"
-    font-size="42" fill="#d4d4d4"
+    font-size="54" fill="#ffffff"
     font-weight="bold"
     letter-spacing="2" text-anchor="middle">Guess the ticker in 6 tries.</text>
 
   <!-- ── Domain ─────────────────────────────────────────────────────────── -->
   <text x="600" y="560"
     font-family="'Courier New', Courier, monospace"
-    font-size="28" fill="#22c55e"
+    font-size="44" fill="#22c55e"
     font-weight="bold"
-    letter-spacing="3" text-anchor="middle">tickerdle.org</text>
+    letter-spacing="4" text-anchor="middle">tickerdle.org</text>
 
 </svg>
