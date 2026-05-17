@@ -54,5 +54,5 @@ export function generateShareText(guesses, evaluations, isDaily, puzzleNumber, w
     }).join('')
   ).join('\n');
 
-  return `${title} ${score}\n${streakLine}\n${grid}`;
+  return `${title} ${score}\n${streakLine}\n${grid}\n\ntickerdle.org`;
 }
