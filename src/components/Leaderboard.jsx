@@ -4,9 +4,14 @@ import { getLeaderboard } from '../utils/leaderboard';
 export default function Leaderboard() {
   const [selectedMode, setSelectedMode] = useState('endless');
   const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setEntries(getLeaderboard(selectedMode));
+    setLoading(true);
+    getLeaderboard(selectedMode).then((data) => {
+      setEntries(data);
+      setLoading(false);
+    });
   }, [selectedMode]);
 
   const modeLabels = {
@@ -41,7 +46,11 @@ export default function Leaderboard() {
 
         {/* Leaderboard Table */}
         <div className="bg-terminal-surface border border-terminal-border rounded-lg overflow-hidden">
-          {entries.length > 0 ? (
+          {loading ? (
+            <div className="px-6 py-12 text-center">
+              <p className="text-terminal-muted">Loading...</p>
+            </div>
+          ) : entries.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -63,7 +72,7 @@ export default function Leaderboard() {
                 <tbody>
                   {entries.map((entry) => (
                     <tr
-                      key={entry.id}
+                      key={entry.rank}
                       className="border-b border-terminal-border hover:bg-terminal-bg/50 transition-colors"
                     >
                       <td className="px-6 py-3 font-bold text-correct">
@@ -76,7 +85,7 @@ export default function Leaderboard() {
                         {entry.score}
                       </td>
                       <td className="px-6 py-3 text-right text-terminal-muted text-sm">
-                        {new Date(entry.date).toLocaleDateString()}
+                        {entry.date ? new Date(entry.date).toLocaleDateString() : '—'}
                       </td>
                     </tr>
                   ))}

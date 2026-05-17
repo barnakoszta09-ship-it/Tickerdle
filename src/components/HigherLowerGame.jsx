@@ -4,7 +4,12 @@ import { saveScore } from '../utils/leaderboard';
 import { playSoundCorrect, playSoundWrong, playSoundWin, playSoundLose } from '../utils/soundEffects';
 
 export default function HigherLowerGame() {
-  const { hlCurrent, hlNext, hlStreak, hlGuessed, hlShowMarketCap, makeHLGuess, hlGameOver, resetGame, playerName, soundEnabled, soundVolume } = useGame();
+  const {
+    hlCurrent, hlNext, hlStreak, hlGuessed, hlShowMarketCap,
+    makeHLGuess, hlGameOver, resetGame,
+    playerName, playerId, scoreSubmitted, setScoreSubmitted,
+    soundEnabled, soundVolume,
+  } = useGame();
   const [message, setMessage] = useState('');
   const hasScoreSaved = useRef(false);
 
@@ -27,14 +32,13 @@ export default function HigherLowerGame() {
   }, [hlGuessed, soundEnabled, soundVolume]);
 
   useEffect(() => {
-    if (hlGameOver) {
+    if (hlGameOver && !hasScoreSaved.current && !scoreSubmitted) {
       if (soundEnabled) playSoundLose(soundVolume);
-      if (!hasScoreSaved.current) {
-        saveScore('higher-lower', playerName, hlStreak);
-        hasScoreSaved.current = true;
-      }
+      saveScore('higher-lower', playerId, playerName, hlStreak);
+      setScoreSubmitted();
+      hasScoreSaved.current = true;
     }
-  }, [hlGameOver, hlStreak, playerName, soundEnabled, soundVolume]);
+  }, [hlGameOver, hlStreak, playerName, playerId, scoreSubmitted, soundEnabled, soundVolume]);
 
   if (!hlCurrent || !hlNext) {
     return <div>Loading...</div>;

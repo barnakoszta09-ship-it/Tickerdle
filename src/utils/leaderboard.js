@@ -1,49 +1,29 @@
-const LEADERBOARD_STORAGE_KEY = 'tickerdle_leaderboard';
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
-function getLeaderboardData() {
-  const stored = localStorage.getItem(LEADERBOARD_STORAGE_KEY);
-  return stored ? JSON.parse(stored) : { daily: [], endless: [], 'higher-lower': [] };
+/**
+ * Submit a score to the server.
+ * Silently ignores network failures — leaderboard is non-critical.
+ */
+export async function saveScore(mode, playerId, playerName, score) {
+  try {
+    await fetch(`${API_BASE}/api/leaderboard`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode, playerId, playerName, score }),
+    });
+  } catch {}
 }
 
-function saveLeaderboardData(data) {
-  localStorage.setItem(LEADERBOARD_STORAGE_KEY, JSON.stringify(data));
-}
-
-export function saveScore(mode, playerName, score) {
-  const data = getLeaderboardData();
-  
-  const entry = {
-    playerName,
-    score,
-    date: new Date().toISOString(),
-    id: Date.now(),
-  };
-
-  if (!data[mode]) {
-    data[mode] = [];
+/**
+ * Fetch top 10 entries for a given mode from the server.
+ * Returns [] on failure.
+ */
+export async function getLeaderboard(mode) {
+  try {
+    const res = await fetch(`${API_BASE}/api/leaderboard/${encodeURIComponent(mode)}`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch {
+    return [];
   }
-
-  data[mode].push(entry);
-  
-  // Sort by score descending
-  data[mode].sort((a, b) => b.score - a.score);
-  
-  // Keep top 100 (we'll show top 10)
-  data[mode] = data[mode].slice(0, 100);
-
-  saveLeaderboardData(data);
-}
-
-export function getLeaderboard(mode) {
-  const data = getLeaderboardData();
-  return (data[mode] || []).slice(0, 10).map((entry, index) => ({
-    ...entry,
-    rank: index + 1,
-  }));
-}
-
-export function clearLeaderboard(mode) {
-  const data = getLeaderboardData();
-  data[mode] = [];
-  saveLeaderboardData(data);
 }

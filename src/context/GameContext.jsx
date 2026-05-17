@@ -1,8 +1,8 @@
-import { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { getDailyTicker, getRandomTicker, getDailySeed, isValidTicker } from '../utils/tickers';
 import { evaluateGuess, MAXATTEMPTS, WORDLENGTH } from '../utils/gameLogic';
 import { getRandomHLPair } from '../utils/sp500';
-import { saveScore } from '../utils/leaderboard';
+import { getOrCreatePlayerId } from '../utils/identity';
 
 const GameContext = createContext();
 
@@ -10,10 +10,10 @@ const STORAGEKEY = 'tickerdlestate';
 
 function getInitialState(mode = 'daily') {
   const saved = localStorage.getItem(STORAGEKEY);
-  const playerName = localStorage.getItem('tickerdle_playerName') || 'Anonymous';
-  const soundEnabled = localStorage.getItem('tickerdle_soundEnabled') !== 'false';
-  const rawVolume = parseFloat(localStorage.getItem('tickerdle_soundVolume'));
-  const soundVolume = isNaN(rawVolume) ? 0.5 : rawVolume;
+  const playerName    = localStorage.getItem('tickerdle_playerName') || 'Anonymous';
+  const soundEnabled  = localStorage.getItem('tickerdle_soundEnabled') !== 'false';
+  const rawVolume     = parseFloat(localStorage.getItem('tickerdle_soundVolume'));
+  const soundVolume   = isNaN(rawVolume) ? 0.5 : rawVolume;
   const chartStyle    = localStorage.getItem('tickerdle_chartStyle') || 'line';
   const showHowToPlay = localStorage.getItem('tickerdle_showHTP') !== 'false';
   const soundSettings = { playerName, soundEnabled, soundVolume, chartStyle, showHowToPlay };
@@ -23,7 +23,10 @@ function getInitialState(mode = 'daily') {
     const currentSeed = getDailySeed();
 
     if (mode === 'daily' && parsed.mode === 'daily' && parsed.dailySeed !== currentSeed) {
-      return { ...createFreshState('daily'), ...soundSettings };
+      // New day — carry streak only if the player won exactly yesterday
+      const wonYesterday = parsed.won && parsed.dailySeed === currentSeed - 1;
+      const carriedStreak = wonYesterday ? parsed.streak : 0;
+      return { ...createFreshState('daily'), ...soundSettings, streak: carriedStreak };
     }
 
     if (mode === 'endless' && parsed.mode === 'daily' && parsed.gameOver) {
@@ -56,6 +59,7 @@ function createFreshState(mode) {
       hlGuessed: null,
       hlGameOver: false,
       hlShowMarketCap: true,
+      scoreSubmitted: false,
     };
   }
 
@@ -73,6 +77,7 @@ function createFreshState(mode) {
     dailySeed: mode === 'daily' ? getDailySeed() : null,
     streak: 0,
     usedTickers: mode === 'endless' ? [target] : [],
+    scoreSubmitted: false,
   };
 }
 
@@ -196,39 +201,28 @@ function gameReducer(state, action) {
       };
     }
 
+    case 'SET_SCORE_SUBMITTED': {
+      return { ...state, scoreSubmitted: true };
+    }
+
     case 'SET_PLAYER_NAME': {
-      return {
-        ...state,
-        playerName: action.playerName,
-      };
+      return { ...state, playerName: action.playerName };
     }
 
     case 'SET_SOUND_ENABLED': {
-      return {
-        ...state,
-        soundEnabled: action.soundEnabled,
-      };
+      return { ...state, soundEnabled: action.soundEnabled };
     }
 
     case 'SET_SOUND_VOLUME': {
-      return {
-        ...state,
-        soundVolume: action.soundVolume,
-      };
+      return { ...state, soundVolume: action.soundVolume };
     }
 
     case 'SET_CHART_STYLE': {
-      return {
-        ...state,
-        chartStyle: action.chartStyle,
-      };
+      return { ...state, chartStyle: action.chartStyle };
     }
 
     case 'SET_SHOW_HTP': {
-      return {
-        ...state,
-        showHowToPlay: action.showHowToPlay,
-      };
+      return { ...state, showHowToPlay: action.showHowToPlay };
     }
 
     default:
@@ -238,6 +232,9 @@ function gameReducer(state, action) {
 
 export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, 'daily', getInitialState);
+
+  // Stable player UUID — generated once on first visit, persists in localStorage
+  const playerId = useRef(getOrCreatePlayerId()).current;
 
   useEffect(() => {
     localStorage.setItem(STORAGEKEY, JSON.stringify(state));
@@ -310,6 +307,10 @@ export function GameProvider({ children }) {
     dispatch({ type: 'SET_SHOW_HTP', showHowToPlay: value });
   }, []);
 
+  const setScoreSubmitted = useCallback(() => {
+    dispatch({ type: 'SET_SCORE_SUBMITTED' });
+  }, []);
+
   useEffect(() => {
     if (state.hlGuessed !== null) {
       const timer = setTimeout(() => dispatch({ type: 'CLEAR_HL_GUESS' }), 1000);
@@ -319,6 +320,7 @@ export function GameProvider({ children }) {
 
   const value = {
     ...state,
+    playerId,
     addLetter,
     deleteLetter,
     submitGuess,
@@ -331,6 +333,7 @@ export function GameProvider({ children }) {
     setSoundVolume,
     setChartStyle,
     setShowHowToPlay,
+    setScoreSubmitted,
     puzzleNumber: getDailySeed(),
   };
 

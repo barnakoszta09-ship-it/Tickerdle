@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import apiRouter from './routes/api.js';
+import leaderboardRouter from './routes/leaderboard.js';
 
 const PORT        = process.env.PORT        || 3001;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || 'https://tickerdle.org';
@@ -58,6 +59,7 @@ app.use('/api/evaluate', evaluateLimiter);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api', apiRouter);
+app.use('/api/leaderboard', leaderboardRouter);
 
 // ── 404 / error handlers ──────────────────────────────────────────────────────
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));

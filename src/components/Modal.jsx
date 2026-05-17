@@ -4,12 +4,15 @@ import ShareButton from './ShareButton';
 import { saveScore } from '../utils/leaderboard';
 
 export default function Modal() {
-  const { gameOver, won, target, mode, streak, newEndlessGame, switchMode, puzzleNumber, guesses, playerName } = useGame();
+  const {
+    gameOver, won, target, mode, streak, newEndlessGame, switchMode,
+    puzzleNumber, guesses, playerName, playerId, scoreSubmitted, setScoreSubmitted,
+  } = useGame();
   const [show, setShow] = useState(false);
   const hasScoreSaved = useRef(false);
 
   useEffect(() => {
-    if (gameOver && !hasScoreSaved.current) {
+    if (gameOver && !hasScoreSaved.current && !scoreSubmitted) {
       let score = 0;
       if (mode === 'daily') {
         score = won ? Math.max(1, 7 - guesses.length) : 0;
@@ -17,7 +20,8 @@ export default function Modal() {
         score = streak;
       }
       if (score > 0) {
-        saveScore(mode, playerName, score);
+        saveScore(mode, playerId, playerName, score);
+        setScoreSubmitted();
       }
       hasScoreSaved.current = true;
       const timer = setTimeout(() => setShow(true), 1500);
@@ -26,7 +30,7 @@ export default function Modal() {
       if (!gameOver) hasScoreSaved.current = false;
       setShow(false);
     }
-  }, [gameOver, mode, won, guesses, streak, playerName]);
+  }, [gameOver, mode, won, guesses, streak, playerName, playerId, scoreSubmitted]);
 
   if (!show) return null;
 
@@ -44,7 +48,7 @@ export default function Modal() {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div 
+      <div
         className="bg-terminal-surface rounded-xl p-6 max-w-sm w-full text-center border border-terminal-border"
         onClick={(e) => e.stopPropagation()}
       >
@@ -86,7 +90,7 @@ export default function Modal() {
 
         <div className="flex flex-col gap-3">
           <ShareButton />
-          
+
           {mode === 'daily' ? (
             <button
               onClick={handleContinueEndless}
