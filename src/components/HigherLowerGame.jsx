@@ -111,8 +111,9 @@ export default function HigherLowerGame() {
             </button>
           )}
         </div>
-        <p className={`text-sm text-terminal-muted h-5 ${hlGameOver ? '' : 'invisible'}`}>
-          Final Streak: {hlStreak}
+        <p className="text-sm text-terminal-muted h-5">
+          {hlGameOver ? 'Final Streak: ' : 'Streak: '}
+          <span className="text-correct font-bold">{hlStreak}</span>
         </p>
       </div>
 
