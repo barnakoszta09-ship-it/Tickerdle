@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
 import { saveScore } from '../utils/leaderboard';
 import { playSoundCorrect, playSoundWrong, playSoundWin, playSoundLose } from '../utils/soundEffects';
@@ -11,6 +11,7 @@ export default function HigherLowerGame() {
     soundEnabled, soundVolume,
   } = useGame();
   const [message, setMessage] = useState('');
+  const [streakPop, setStreakPop] = useState(false);
   const hasScoreSaved = useRef(false);
 
   const handleGuess = (guess) => {
@@ -22,6 +23,8 @@ export default function HigherLowerGame() {
       if (hlGuessed) {
         setMessage('✓ Correct!');
         if (soundEnabled) playSoundCorrect(soundVolume);
+        setStreakPop(true);
+        setTimeout(() => setStreakPop(false), 400);
         setTimeout(() => setMessage(''), 1000);
       } else {
         setMessage('✗ Wrong!');
@@ -111,15 +114,16 @@ export default function HigherLowerGame() {
             </button>
           )}
         </div>
-        <p className="text-sm text-terminal-muted h-5">
-          {hlGameOver ? 'Final Streak: ' : 'Streak: '}
-          <span className="text-correct font-bold">{hlStreak}</span>
-        </p>
-      </div>
-
-      <div className="text-center mt-8">
-        <p className="text-xs uppercase text-terminal-muted">Streak</p>
-        <p className="text-3xl font-bold font-mono text-correct">{hlStreak}</p>
+        <div className="flex flex-col items-center mt-2">
+          <p className="text-[10px] uppercase tracking-widest text-terminal-muted mb-1">
+            {hlGameOver ? 'Final Streak' : 'Streak'}
+          </p>
+          <p
+            className={`text-5xl font-bold font-mono text-correct transition-transform duration-150 ${streakPop ? 'scale-125' : 'scale-100'}`}
+          >
+            {hlStreak > 0 && !hlGameOver ? '🔥' : ''}{hlStreak}
+          </p>
+        </div>
       </div>
     </div>
   );
