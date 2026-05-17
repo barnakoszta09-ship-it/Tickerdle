@@ -181,8 +181,12 @@ function gameReducer(state, action) {
     case 'RESETGAME': {
       return {
         ...createFreshState(state.mode),
+        playerName: state.playerName,
+        playerId: state.playerId,
         soundEnabled: state.soundEnabled,
         soundVolume: state.soundVolume,
+        chartStyle: state.chartStyle,
+        showHowToPlay: state.showHowToPlay,
       };
     }
 
