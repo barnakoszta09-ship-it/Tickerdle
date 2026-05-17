@@ -10,34 +10,39 @@ import PlayerNameInput from './components/PlayerNameInput.jsx';
 import HowToPlay from './components/HowToPlay.jsx';
 import BackgroundChart from './components/BackgroundChart.jsx';
 
+const VALID_NAME_RE = /^[a-zA-Z0-9_]{2,16}$/;
+function hasValidName(name) {
+  return Boolean(name && name !== 'Anonymous' && VALID_NAME_RE.test(name.trim()));
+}
+
 function AppContent() {
   const { mode, playerName, setPlayerName, showHowToPlay = true } = useGame();
-  const [showNameInput, setShowNameInput] = useState(playerName === 'Anonymous');
+  const [showNameInput, setShowNameInput] = useState(!hasValidName(playerName));
 
-  // Track which snap section is active by watching the container's scrollTop.
-  // We use a scroll listener rather than IntersectionObserver because the HTP
-  // section's top edge lands exactly at viewport-bottom on load, causing the
-  // observer to fire immediately with isIntersecting=true at the boundary pixel.
   const snapRef = useRef(null);
+  const htpRef = useRef(null);
   const [htpVisible, setHtpVisible] = useState(false);
 
+  // Primary: IntersectionObserver on the HTP section (reliable in Android WebView).
+  // Threshold 0.15 avoids false positives from the boundary pixel at load time.
+  useEffect(() => {
+    const el = htpRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setHtpVisible(entry.isIntersecting),
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Fallback: scroll listener on the container for browsers without good IO support.
   useEffect(() => {
     const el = snapRef.current;
     if (!el) return;
-    const handler = () => {
-      // Hide keyboard once user has scrolled more than 30 % of a section height.
-      // scroll-snap will always land at 0 (game) or clientHeight (HTP), so this
-      // midpoint fires reliably without false positives on load.
-      setHtpVisible(el.scrollTop > el.clientHeight * 0.3);
-    };
-    // Listen to both 'scroll' (fires during animation) and 'scrollend' (fires
-    // after snap settles). Desktop Chrome with scroll-snap can skip intermediate
-    // scroll events and only fire once at the final position — 'scrollend'
-    // guarantees we always read the settled scrollTop.
+    const handler = () => setHtpVisible(el.scrollTop > el.clientHeight * 0.3);
     el.addEventListener('scroll', handler, { passive: true });
     el.addEventListener('scrollend', handler, { passive: true });
-    // Sync initial state (handles browser restoring scroll position)
-    handler();
     return () => {
       el.removeEventListener('scroll', handler);
       el.removeEventListener('scrollend', handler);
@@ -109,7 +114,10 @@ function AppContent() {
 
         {/* Section 2: How to Play — hidden in H/L and leaderboard modes */}
         {showHowToPlay && isGameMode && (
-          <HowToPlay onScrollUp={() => snapRef.current?.scrollTo({ top: 0, behavior: 'smooth' })} />
+          <HowToPlay
+            sectionRef={htpRef}
+            onScrollUp={() => snapRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+          />
         )}
       </div>
 

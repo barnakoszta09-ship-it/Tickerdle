@@ -30,13 +30,23 @@
       margin-bottom: 1.5rem;
     }
     .logo a {
-      color: #22c55e;
+      color: #d4d4d4;
       text-decoration: none;
       font-size: 1.5rem;
       font-weight: bold;
       letter-spacing: 0.1em;
     }
     .logo a:hover { opacity: 0.8; }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-bottom: 1.25rem;
+      color: #22c55e;
+      text-decoration: none;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+    }
+    .back-link:hover { text-decoration: underline; }
     h1 {
       font-size: 1.2rem;
       font-weight: bold;
@@ -94,7 +104,12 @@
 </head>
 <body>
   <div class="card">
-    <div class="logo"><a href="/">T🕯CKERDLE</a></div>
+    <div class="logo">
+      <a href="/" aria-label="TICKERDLE">
+        <span aria-hidden="true">T</span><svg aria-hidden="true" viewBox="0 0 10 16" style="display:inline-block;width:0.60em;height:1em;vertical-align:baseline;margin-right:0.10em;" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="0" x2="5" y2="16" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/><rect x="1.5" y="3" width="7" height="10" rx="1" fill="#22c55e"/></svg><span aria-hidden="true">CKERDLE</span>
+      </a>
+    </div>
+    <a class="back-link" href="/">← Back to Tickerdle</a>
 
     <div id="form-section">
       <h1>🐛 Report a Bug</h1>

@@ -35,9 +35,9 @@ function CoffeeIcon() {
   );
 }
 
-export default function HowToPlay({ onScrollUp }) {
+export default function HowToPlay({ onScrollUp, sectionRef }) {
   return (
-    <section className="snap-start min-h-screen w-full bg-terminal-bg border-t border-terminal-border flex flex-col items-center justify-center px-6 py-6">
+    <section ref={sectionRef} className="snap-start min-h-screen w-full bg-terminal-bg border-t border-terminal-border flex flex-col items-center justify-center px-6 py-6">
       <div className="max-w-lg w-full space-y-4">
 
         {/* Title */}

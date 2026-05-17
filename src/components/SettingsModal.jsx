@@ -144,14 +144,30 @@ export default function SettingsModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* ── Bug Report ──────────────────────────────────────────────────── */}
-          <div className="mb-6">
+          {/* ── About, Bug Report & Privacy ─────────────────────────────────── */}
+          <div className="mb-6 flex gap-2">
             <button
-              onClick={() => window.open('https://tickerdle.org/bugreport', '_blank')}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-terminal-border bg-terminal-bg hover:border-partial hover:bg-partial/10 text-terminal-text hover:text-partial font-semibold text-sm transition-colors"
+              onClick={() => window.open('/about.html', '_blank')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-terminal-border bg-terminal-bg hover:border-terminal-muted hover:bg-terminal-muted/10 text-terminal-text font-semibold text-sm transition-colors"
+            >
+              <span>ℹ️</span>
+              About
+            </button>
+            <button
+              onClick={() => window.open('/bugreport.html', '_blank')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-terminal-border bg-terminal-bg hover:border-partial hover:bg-partial/10 text-terminal-text hover:text-partial font-semibold text-sm transition-colors"
             >
               <span>🐛</span>
               Report a Bug
+            </button>
+          </div>
+          <div className="mb-6">
+            <button
+              onClick={() => window.open('/privacy.html', '_blank')}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-terminal-border bg-terminal-bg hover:border-terminal-muted hover:bg-terminal-muted/10 text-terminal-muted font-semibold text-sm transition-colors"
+            >
+              <span>🔒</span>
+              Privacy Policy
             </button>
           </div>
 
