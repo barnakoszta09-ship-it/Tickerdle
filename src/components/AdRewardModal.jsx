@@ -1,61 +1,122 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
-const AD_DURATION = 15; // seconds
+const SIMULATION_DURATION = 15; // seconds — used only when no real ad is served
+const AD_READY_TIMEOUT_MS = 3000; // wait this long for Google to serve an ad
 
 /**
  * Rewarded-ad gate for the "🎯 Reveal a Letter" hint.
  *
- * INTEGRATION POINT — replace simulateAd() with your real SDK call:
+ * Real-ad flow (Google AdSense H5 Games API):
+ *   1. User clicks "Watch Ad"
+ *   2. adBreak({ type: 'reward', ... }) is called
+ *   3. Google's player overlays the page and plays the video
+ *   4. adViewed()  → reward granted, modal shows success screen
+ *   5. adDismissed() → no reward, modal returns to prompt
  *
- *   Google AdSense Rewarded (web):
- *     window.adBreak({ type: 'reward', name: 'reveal_letter',
- *       beforeReward: (showAdFn) => showAdFn(),
- *       adDismissed: onClose,
- *       adViewed: onRewarded });
+ * Fallback (no ad served / ad blocked / not yet approved):
+ *   Shows a 15-second simulated countdown so the UX still works during
+ *   development and before AdSense approval.
  *
- *   Google AdMob (Capacitor / Android):
- *     import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob';
- *     AdMob.addListener(RewardAdPluginEvents.Rewarded, onRewarded);
- *     await AdMob.showRewardVideoAd();
- *
- * Until a real SDK is wired in, a 15-second countdown simulates the experience.
+ * FINAL SETUP STEP: Replace ca-pub-XXXXXXXXXXXXXXXX in index.html with your
+ * real AdSense publisher ID. That's the only change needed to go live.
  */
 export default function AdRewardModal({ isOpen, onClose, onRewarded }) {
-  const [phase, setPhase] = useState('prompt'); // 'prompt' | 'watching' | 'done'
-  const [seconds, setSeconds] = useState(AD_DURATION);
-  const rewardedRef = useRef(false);
+  const [phase, setPhase]       = useState('prompt');   // 'prompt'|'loading'|'watching'|'done'|'nodad'
+  const [seconds, setSeconds]   = useState(SIMULATION_DURATION);
+  const [isSimulation, setIsSimulation] = useState(false);
+  const rewardedRef   = useRef(false);
+  const fallbackTimer = useRef(null);
 
-  // Reset when modal re-opens
+  // Reset every time the modal opens
   useEffect(() => {
     if (isOpen) {
       setPhase('prompt');
-      setSeconds(AD_DURATION);
+      setSeconds(SIMULATION_DURATION);
+      setIsSimulation(false);
       rewardedRef.current = false;
     }
+    return () => clearTimeout(fallbackTimer.current);
   }, [isOpen]);
 
-  // Countdown
-  useEffect(() => {
-    if (phase !== 'watching') return;
-    if (seconds <= 0) {
-      setPhase('done');
-      if (!rewardedRef.current) {
-        rewardedRef.current = true;
-        onRewarded();
-      }
-      return;
+  const grantReward = useCallback(() => {
+    if (!rewardedRef.current) {
+      rewardedRef.current = true;
+      onRewarded();
     }
+    setPhase('done');
+  }, [onRewarded]);
+
+  // Simulation countdown (fallback path only)
+  useEffect(() => {
+    if (!isSimulation || phase !== 'watching') return;
+    if (seconds <= 0) { grantReward(); return; }
     const t = setTimeout(() => setSeconds(s => s - 1), 1000);
     return () => clearTimeout(t);
-  }, [phase, seconds, onRewarded]);
+  }, [isSimulation, phase, seconds, grantReward]);
+
+  const handleWatchAd = () => {
+    setPhase('loading');
+
+    // ── Real ad path ────────────────────────────────────────────────────────
+    // adBreak is defined globally in index.html (H5 Games shim + AdSense SDK).
+    // If Google serves an ad, beforeReward fires and the SDK overlays the page.
+    // If no ad is available within AD_READY_TIMEOUT_MS we fall back.
+
+    let adStarted = false;
+
+    // Safety fallback — fires if Google never calls beforeReward
+    fallbackTimer.current = setTimeout(() => {
+      if (!adStarted) {
+        console.info('[Tickerdle] No ad available — using simulation fallback');
+        setIsSimulation(true);
+        setSeconds(SIMULATION_DURATION);
+        setPhase('watching');
+      }
+    }, AD_READY_TIMEOUT_MS);
+
+    try {
+      window.adBreak({
+        type: 'reward',
+        name: 'reveal_letter',
+
+        // Called when a real ad is ready — show it immediately
+        beforeReward: (showAdFn) => {
+          adStarted = true;
+          clearTimeout(fallbackTimer.current);
+          setIsSimulation(false);
+          setPhase('watching');
+          showAdFn(); // Google's player takes over the screen
+        },
+
+        // User watched the full ad ✓
+        adViewed: () => {
+          grantReward();
+        },
+
+        // User closed the ad early — no reward
+        adDismissed: () => {
+          setPhase('prompt');
+        },
+
+        // Called after ad closes (viewed or dismissed)
+        afterAd: () => {},
+      });
+    } catch (err) {
+      // adBreak threw (e.g. AdSense not loaded at all) — go straight to fallback
+      clearTimeout(fallbackTimer.current);
+      console.warn('[Tickerdle] adBreak error, using simulation:', err);
+      setIsSimulation(true);
+      setSeconds(SIMULATION_DURATION);
+      setPhase('watching');
+    }
+  };
 
   if (!isOpen) return null;
 
-  const progress = ((AD_DURATION - seconds) / AD_DURATION) * 100;
+  const progress = ((SIMULATION_DURATION - seconds) / SIMULATION_DURATION) * 100;
 
   const handleBackdrop = (e) => {
-    // Block closing while ad is playing
-    if (phase === 'watching') return;
+    if (phase === 'watching' || phase === 'loading') return; // block dismiss while ad plays
     if (e.target === e.currentTarget) onClose();
   };
 
@@ -77,40 +138,55 @@ export default function AdRewardModal({ isOpen, onClose, onRewarded }) {
               </p>
             </div>
             <button
-              onClick={() => setPhase('watching')}
+              onClick={handleWatchAd}
               className="w-full py-3 bg-correct hover:bg-correct/90 text-white font-bold rounded-lg transition-colors text-sm"
             >
               ▶ Watch Ad
             </button>
-            <button
-              onClick={onClose}
-              className="text-xs text-terminal-muted hover:text-terminal-text transition-colors"
-            >
+            <button onClick={onClose} className="text-xs text-terminal-muted hover:text-terminal-text transition-colors">
               No thanks
             </button>
           </>
         )}
 
-        {/* ── Watching (simulated ad) ─────────────────────────────────────── */}
+        {/* ── Loading (waiting for Google to serve an ad) ─────────────────── */}
+        {phase === 'loading' && (
+          <>
+            <div className="text-4xl animate-pulse">📺</div>
+            <p className="text-sm text-terminal-muted">Loading ad…</p>
+          </>
+        )}
+
+        {/* ── Watching ────────────────────────────────────────────────────── */}
         {phase === 'watching' && (
           <>
-            {/* Simulated ad placeholder — replace this block with your real ad container */}
-            <div className="w-full aspect-video bg-terminal-bg border border-terminal-border rounded-lg flex flex-col items-center justify-center gap-2 text-terminal-muted">
-              <span className="text-3xl">📺</span>
-              <span className="text-xs uppercase tracking-widest">Ad playing…</span>
-              {/* Your ad SDK will render its player here */}
-            </div>
-
-            {/* Progress bar */}
-            <div className="w-full">
-              <div className="w-full h-1.5 bg-terminal-border rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-correct transition-all duration-1000"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <p className="text-xs text-terminal-muted text-right mt-1">{seconds}s remaining</p>
-            </div>
+            {isSimulation ? (
+              // Simulation fallback — show countdown
+              <>
+                <div className="w-full aspect-video bg-terminal-bg border border-terminal-border rounded-lg flex flex-col items-center justify-center gap-2 text-terminal-muted">
+                  <span className="text-3xl">📺</span>
+                  <span className="text-xs uppercase tracking-widest">Ad playing…</span>
+                </div>
+                <div className="w-full">
+                  <div className="w-full h-1.5 bg-terminal-border rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-correct transition-all duration-1000"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-terminal-muted text-right mt-1">{seconds}s remaining</p>
+                </div>
+              </>
+            ) : (
+              // Real ad — Google's player is on top; just show a brief note
+              <>
+                <div className="text-4xl animate-pulse">📺</div>
+                <p className="text-sm text-terminal-muted text-center">
+                  Your ad is playing…<br />
+                  <span className="text-xs">Watch until the end to unlock your hint.</span>
+                </p>
+              </>
+            )}
           </>
         )}
 

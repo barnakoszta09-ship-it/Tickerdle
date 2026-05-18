@@ -41,6 +41,21 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
+    <!-- ── Google AdSense / H5 Games Rewarded Ads ──────────────────────────
+         SETUP: Replace ca-pub-XXXXXXXXXXXXXXXX with your real AdSense publisher
+         ID from https://adsense.google.com → Account → Account information.
+         The shim below keeps adBreak/adConfig defined even before the script
+         loads so calls made before async load don't throw.
+    ─────────────────────────────────────────────────────────────────────── -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+    <script>
+      window.adsbygoogle = window.adsbygoogle || [];
+      function adBreak(params)  { window.adsbygoogle.push(params); }
+      function adConfig(params) { window.adsbygoogle.push(params); }
+      // Pre-load ad breaks so the rewarded ad is ready instantly when needed
+      adConfig({ preloadAdBreaks: 'on', sound: 'off' });
+    </script>
+
     <!-- ── Fonts ─────────────────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -125,7 +140,7 @@
           "name": "Is Tickerdle free?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes, Tickerdle is completely free to play. No sign-up, no subscription, no ads. Just visit tickerdle.org and start playing."
+            "text": "Yes, Tickerdle is completely free to play. No sign-up, no subscription required. Optional rewarded ads unlock in-game hints. Just visit tickerdle.org and start playing."
           }
         },
         {
