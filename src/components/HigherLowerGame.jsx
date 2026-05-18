@@ -11,6 +11,15 @@ export default function HigherLowerGame() {
     soundEnabled, soundVolume,
   } = useGame();
   const isCrypto = mode === 'crypto';
+  const isMixed  = mode === 'mixed-hl';
+
+  // Helper: type badge for mixed mode items
+  const typeBadge = (item) => {
+    if (!isMixed || !item?.type) return null;
+    return item.type === 'crypto'
+      ? <span className="inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-terminal-border text-terminal-muted ml-1">CRYPTO</span>
+      : <span className="inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-terminal-border text-terminal-muted ml-1">STOCK</span>;
+  };
   const [message, setMessage] = useState('');
   const [streakPop, setStreakPop] = useState(false);
   const hasScoreSaved = useRef(false);
@@ -60,11 +69,9 @@ export default function HigherLowerGame() {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-4 w-full">
       <div className="text-center">
-        <p className="text-xs uppercase text-terminal-muted mb-2">
-          {isCrypto ? 'Current Market Cap' : 'Current Market Cap'}
-        </p>
+        <p className="text-xs uppercase text-terminal-muted mb-2">Current Market Cap</p>
         <div className="text-4xl font-bold font-mono text-terminal-text mb-1">
-          {hlCurrent.symbol}
+          {hlCurrent.symbol}{typeBadge(hlCurrent)}
         </div>
         <p className="text-base text-terminal-muted">{hlCurrent.name}</p>
         <div className="text-2xl font-bold text-correct mt-1">
@@ -76,10 +83,10 @@ export default function HigherLowerGame() {
 
       <div className="text-center">
         <p className="text-xs uppercase text-terminal-muted mb-2">
-          {isCrypto ? 'Next Cryptocurrency' : 'Next Company'}
+          {isMixed ? 'Next Asset' : isCrypto ? 'Next Cryptocurrency' : 'Next Company'}
         </p>
         <div className="text-4xl font-bold font-mono text-terminal-text mb-1">
-          {hlNext.symbol}
+          {hlNext.symbol}{typeBadge(hlNext)}
         </div>
         <p className="text-base text-terminal-muted">{hlNext.name}</p>
         <div className={`text-2xl font-bold mt-1 ${isCorrect ? 'text-correct' : isWrong ? 'text-partial' : 'text-terminal-text'}`}>
