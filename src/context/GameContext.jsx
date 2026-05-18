@@ -226,8 +226,10 @@ function gameReducer(state, action) {
       if (state.hlGameOver) return state;
 
       const guess = action.guess;
-      const isCorrect = (guess === 'higher' && state.hlNext.marketCap > state.hlCurrent.marketCap) ||
-                        (guess === 'lower' && state.hlNext.marketCap < state.hlCurrent.marketCap);
+      const isTie = state.hlNext.marketCap === state.hlCurrent.marketCap;
+      const isCorrect = isTie ||
+                        (guess === 'higher' && state.hlNext.marketCap > state.hlCurrent.marketCap) ||
+                        (guess === 'lower'  && state.hlNext.marketCap < state.hlCurrent.marketCap);
 
       if (isCorrect) {
         const newCurrent = state.hlNext;
