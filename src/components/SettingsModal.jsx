@@ -176,13 +176,20 @@ export default function SettingsModal({ isOpen, onClose }) {
               Report a Bug
             </button>
           </div>
-          <div className="mb-6">
+          <div className="mb-6 flex gap-2">
             <button
               onClick={() => window.open('/privacy.html', '_blank')}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-terminal-border bg-terminal-bg hover:border-terminal-muted hover:bg-terminal-muted/10 text-terminal-muted font-semibold text-sm transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-terminal-border bg-terminal-bg hover:border-terminal-muted hover:bg-terminal-muted/10 text-terminal-muted font-semibold text-sm transition-colors"
             >
               <span>🔒</span>
-              Privacy Policy
+              Privacy
+            </button>
+            <button
+              onClick={() => window.open('/terms.html', '_blank')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-terminal-border bg-terminal-bg hover:border-terminal-muted hover:bg-terminal-muted/10 text-terminal-muted font-semibold text-sm transition-colors"
+            >
+              <span>📄</span>
+              Terms
             </button>
           </div>
 
