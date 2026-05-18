@@ -24,6 +24,8 @@ function AppContent() {
   const htpRef = useRef(null);
   const [htpVisible, setHtpVisible] = useState(false);
 
+  const isGameMode = mode === 'daily' || mode === 'endless';
+
   // Primary: IntersectionObserver on the HTP section.
   // Re-runs when the HTP section mounts/unmounts (showHowToPlay / isGameMode change)
   // so the observer always attaches to the live DOM node, even if it rendered after
@@ -61,8 +63,6 @@ function AppContent() {
   if (showNameInput) {
     return <PlayerNameInput onSubmit={handleNameSubmit} />;
   }
-
-  const isGameMode = mode === 'daily' || mode === 'endless';
 
   return (
     <>
