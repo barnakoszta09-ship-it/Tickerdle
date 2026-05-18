@@ -11,7 +11,7 @@ import { MAXATTEMPTS } from '../utils/gameLogic';
  *  • "💡 Hint" button is always visible while the game is active.
  *    – Disabled (grayed) before guess 3.
  *    – Active from guess 3 onward.  First click upgrades the auto-hint panel
- *      to tier 2 (length + first letter).
+ *      to tier 2 (first letter only — length is already visible in the grid).
  *  • Auto-hint panel fades in automatically after the 3rd wrong guess.
  *  • "🎯 Reveal a Letter" appears only on the 6th (final) guess, while
  *    at least one position is still unresolved.
