@@ -63,9 +63,9 @@ npm ci --prefix "$SERVER_DIR" --omit=dev --silent
 log "Reloading backend (PM2)..."
 cd "$SERVER_DIR"
 if pm2 id tickerdle-server &>/dev/null; then
-  pm2 reload ecosystem.config.cjs --env production --update-env
+  pm2 reload ecosystem.config.js --env production --update-env
 else
-  pm2 start ecosystem.config.cjs --env production
+  pm2 start ecosystem.config.js --env production
   pm2 save  # persist process list across reboots
 fi
 
