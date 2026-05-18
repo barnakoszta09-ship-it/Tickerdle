@@ -37,8 +37,7 @@ export default function HintArea() {
     return target.split('').some((_, i) => !correct.has(i));
   }, [target, evaluations, isOnLastGuess]);
 
-  const showRevealBtn = ADS_ENABLED
-    && isOnLastGuess && !won && !gameOver
+  const showRevealBtn = isOnLastGuess && !won && !gameOver
     && revealedLetterPos === null
     && hasRevealablePositions;
 
@@ -50,10 +49,12 @@ export default function HintArea() {
       {/* ── Auto hint panel ─────────────────────────────────────────────── */}
       {autoHintVisible && <HintPanel />}
 
-      {/* ── 🎯 Reveal a Letter — only on the 6th guess, gated by an ad ──── */}
+      {/* ── 🎯 Reveal a Letter — only on the 6th guess ──────────────────── */}
+      {/* When ADS_ENABLED: opens the rewarded ad modal first             */}
+      {/* When !ADS_ENABLED: reveals directly for free                    */}
       {showRevealBtn && (
         <button
-          onClick={() => setAdOpen(true)}
+          onClick={() => ADS_ENABLED ? setAdOpen(true) : revealLetter()}
           className="px-4 py-1.5 rounded-md text-xs font-semibold border border-partial/60 text-partial bg-partial/10 hover:bg-partial/20 hover:border-partial transition-colors cursor-pointer"
         >
           🎯 Reveal a Letter
