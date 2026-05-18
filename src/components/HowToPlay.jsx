@@ -37,7 +37,7 @@ function CoffeeIcon() {
 
 export default function HowToPlay({ onScrollUp, sectionRef }) {
   return (
-    <section ref={sectionRef} className="snap-start min-h-screen w-full bg-terminal-bg border-t border-terminal-border flex flex-col items-center justify-center px-6 py-6">
+    <section ref={sectionRef} className="snap-start min-h-screen w-full bg-terminal-bg border-t border-terminal-border flex flex-col items-center justify-start px-6 pt-8 pb-10">
       <div className="max-w-lg w-full space-y-4">
 
         {/* Title */}
@@ -125,6 +125,27 @@ export default function HowToPlay({ onScrollUp, sectionRef }) {
             colorWord="P" colorClass="text-terminal-muted"
             label="is not in the ticker at all."
           />
+        </div>
+
+        {/* Hints */}
+        <div className="border-t border-terminal-border pt-3 space-y-3">
+          <p className="text-terminal-muted text-[10px] font-mono tracking-widest uppercase">Hints</p>
+
+          <div className="flex gap-3 items-start">
+            <span className="text-sm mt-0.5">💡</span>
+            <p className="text-xs text-terminal-muted leading-relaxed">
+              After your <span className="text-terminal-text font-semibold">3rd wrong guess</span>, a panel appears showing the ticker&apos;s <span className="text-terminal-text font-semibold">sector</span> and <span className="text-terminal-text font-semibold">market cap tier</span>.
+            </p>
+          </div>
+
+          <div className="flex gap-3 items-start">
+            <span className="text-sm mt-0.5">🎯</span>
+            <p className="text-xs text-terminal-muted leading-relaxed">
+              On your <span className="text-terminal-text font-semibold">final guess</span>, tap <span className="text-terminal-text font-semibold">Reveal a Letter</span> to lock one correct letter as a <span className="text-correct font-semibold">green tile</span>.
+            </p>
+          </div>
+
+          <p className="text-terminal-muted text-[10px] opacity-60">Daily and Endless modes only.</p>
         </div>
 
         {/* Tips */}

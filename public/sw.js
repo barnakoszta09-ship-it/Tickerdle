@@ -1,4 +1,4 @@
-const CACHE = 'tickerdle-v2';
+const CACHE = 'tickerdle-v3';
 
 // Cache the app shell on install
 self.addEventListener('install', (e) => {

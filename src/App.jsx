@@ -24,24 +24,27 @@ function AppContent() {
   const htpRef = useRef(null);
   const [htpVisible, setHtpVisible] = useState(false);
 
-  // Primary: IntersectionObserver on the HTP section (reliable in Android WebView).
-  // Threshold 0.15 avoids false positives from the boundary pixel at load time.
+  // Primary: IntersectionObserver on the HTP section.
+  // Re-runs when the HTP section mounts/unmounts (showHowToPlay / isGameMode change)
+  // so the observer always attaches to the live DOM node, even if it rendered after
+  // the initial mount (e.g. showHowToPlay loaded from localStorage asynchronously).
   useEffect(() => {
     const el = htpRef.current;
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => setHtpVisible(entry.isIntersecting),
-      { threshold: 0.15 }
+      { threshold: 0.05 }   // fire as soon as 5 % of the section is visible
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [showHowToPlay, isGameMode]);
 
-  // Fallback: scroll listener on the container for browsers without good IO support.
+  // Fallback: scroll listener on the container for browsers / WebViews that batch
+  // scroll-snap jumps without firing intermediate scroll events.
   useEffect(() => {
     const el = snapRef.current;
     if (!el) return;
-    const handler = () => setHtpVisible(el.scrollTop > el.clientHeight * 0.3);
+    const handler = () => setHtpVisible(el.scrollTop > el.clientHeight * 0.15);
     el.addEventListener('scroll', handler, { passive: true });
     el.addEventListener('scrollend', handler, { passive: true });
     return () => {
