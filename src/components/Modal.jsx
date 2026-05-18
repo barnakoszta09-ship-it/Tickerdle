@@ -5,7 +5,7 @@ import { saveScore } from '../utils/leaderboard';
 
 export default function Modal() {
   const {
-    gameOver, won, target, mode, streak, newEndlessGame, switchMode,
+    gameOver, won, target, mode, streak, dailyStreak, newEndlessGame, switchMode,
     puzzleNumber, guesses, playerName, playerId, scoreSubmitted, setScoreSubmitted,
   } = useGame();
   const [show, setShow] = useState(false);
@@ -15,7 +15,7 @@ export default function Modal() {
     if (gameOver && !hasScoreSaved.current && !scoreSubmitted) {
       let score = 0;
       if (mode === 'daily') {
-        score = won ? Math.max(1, 7 - guesses.length) : 0;
+        score = won ? dailyStreak : 0;
       } else if (mode === 'endless') {
         score = streak;
       }
@@ -63,18 +63,22 @@ export default function Modal() {
                 {guesses.length === 1 ? 'First try!' : `Solved in ${guesses.length} guesses`}
               </p>
               {mode === 'daily' && (
-                <p className="text-terminal-muted text-sm mt-2">
-                  Come back tomorrow for a new puzzle!
-                </p>
+                <>
+                  <div className="mt-3 mb-1 py-3 px-4 bg-terminal-bg rounded-lg font-mono text-sm">
+                    <p className="text-xs text-terminal-muted uppercase tracking-wider mb-1">Daily streak</p>
+                    <p className="text-2xl font-bold text-correct">🔥 {dailyStreak} {dailyStreak === 1 ? 'day' : 'days'}</p>
+                  </div>
+                  <p className="text-terminal-muted text-sm mt-2">
+                    Come back tomorrow for a new puzzle!
+                  </p>
+                </>
               )}
             </>
           ) : (
             <>
               <div className="text-4xl mb-2">📉</div>
               <h2 className="text-xl font-bold text-terminal-text">Game Over</h2>
-              <p className="text-terminal-muted mt-1">
-                The ticker was <span className="font-mono font-bold text-correct">{target}</span>
-              </p>
+              <p className="text-terminal-muted mt-1">Better luck next time!</p>
             </>
           )}
         </div>
@@ -91,12 +95,19 @@ export default function Modal() {
         <div className="flex flex-col gap-3">
           <ShareButton />
 
-          {mode === 'daily' ? (
+          {mode === 'daily' && won ? (
             <button
               onClick={handleContinueEndless}
               className="px-6 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
             >
               Continue in Endless
+            </button>
+          ) : mode === 'daily' && !won ? (
+            <button
+              onClick={handleContinueEndless}
+              className="px-6 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
+            >
+              Play Endless
             </button>
           ) : (
             <button
