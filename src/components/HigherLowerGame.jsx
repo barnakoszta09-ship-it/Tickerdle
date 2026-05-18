@@ -49,7 +49,7 @@ export default function HigherLowerGame() {
 
   const isCorrect = hlGuessed === true;
   const isWrong = hlGuessed === false;
-  const shouldShowMarketCap = hlShowMarketCap && hlGuessed !== null;
+  const shouldShowMarketCap = hlGameOver || (hlShowMarketCap && hlGuessed !== null);
 
   const handlePlayAgain = () => {
     hasScoreSaved.current = false;
