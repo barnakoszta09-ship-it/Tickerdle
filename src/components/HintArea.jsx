@@ -24,20 +24,21 @@ export default function HintArea() {
   } = useGame();
   const [adOpen, setAdOpen] = useState(false);
 
-  // Only show hints in wordle modes, and only if hints are enabled in settings
-  if (mode !== 'daily' && mode !== 'endless') return null;
-  if (!hintsEnabled) return null;
+  const isGameMode    = mode === 'daily' || mode === 'endless';
+  const autoHintVisible = isGameMode && hintsEnabled && guesses.length >= 3 && !won;
+  const isOnLastGuess   = isGameMode && guesses.length === MAXATTEMPTS - 1;
 
-  const autoHintVisible = guesses.length >= 3 && !won;
-  const isOnLastGuess   = guesses.length === MAXATTEMPTS - 1;
-
-  // Whether there is at least one position the player hasn't nailed yet
+  // Must be called unconditionally — Rules of Hooks forbid calling useMemo after an early return
   const hasRevealablePositions = useMemo(() => {
     if (!target || !isOnLastGuess) return false;
     const correct = new Set();
     evaluations.forEach(row => row.forEach((e, i) => { if (e === 'correct') correct.add(i); }));
     return target.split('').some((_, i) => !correct.has(i));
   }, [target, evaluations, isOnLastGuess]);
+
+  // Early returns — after all hooks
+  if (!isGameMode) return null;
+  if (!hintsEnabled) return null;
 
   const showRevealBtn = isOnLastGuess && !won && !gameOver
     && revealedLetterPos === null
