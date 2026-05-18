@@ -27,6 +27,16 @@
     ul { margin: 0.5rem 0 1rem 1.5rem; font-size: 0.9rem; color: #a3a3a3; }
     li { margin-bottom: 0.4rem; }
     .divider { border: none; border-top: 1px solid #2a2a2a; margin: 2rem 0; }
+    .highlight-box {
+      border: 1px solid #22c55e33;
+      background: #22c55e0a;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: #a3a3a3;
+    }
+    .highlight-box strong { color: #22c55e; }
   </style>
 </head>
 <body>
@@ -38,41 +48,71 @@
   <a class="back-link" href="/">← Back to Tickerdle</a>
 
   <h1>Privacy Policy</h1>
-  <p class="updated">Last updated: May 17, 2026</p>
+  <p class="updated">Last updated: May 18, 2026</p>
 
-  <p>Tickerdle ("we", "our", or "the game") is a free daily word game available at <a href="https://tickerdle.org">tickerdle.org</a> and on Android. This policy explains what data we collect and how we use it.</p>
+  <p>Tickerdle ("we", "our", or "the game") is a free daily word game available at <a href="https://tickerdle.org">tickerdle.org</a> and on Android. This policy explains what data we collect, how we use it, and how optional rewarded advertising works.</p>
 
   <hr class="divider" />
 
   <h2>What we collect</h2>
   <ul>
-    <li><strong>Player UUID</strong> — a randomly generated identifier stored in your browser's localStorage. This is created on your first visit and never linked to your real identity.</li>
+    <li><strong>Player UUID</strong> — a randomly generated identifier stored in your browser's localStorage. Created on your first visit and never linked to your real identity.</li>
     <li><strong>Player name</strong> — the display name you choose when you first play. Stored in localStorage and submitted to the leaderboard.</li>
     <li><strong>Game scores</strong> — your leaderboard scores (streak counts) associated with your player UUID and chosen name.</li>
-    <li><strong>Bug reports</strong> — if you submit a bug report, we store the description, game mode, your browser's user-agent string, and your IP address. This is used only to diagnose issues.</li>
+    <li><strong>Bug reports</strong> — if you submit a bug report, we store the description, game mode, your browser's user-agent string, and your IP address. Used only to diagnose issues.</li>
   </ul>
+
+  <h2>Rewarded Advertising</h2>
+
+  <div class="highlight-box">
+    <strong>Tickerdle is free to play.</strong> To keep it that way, certain optional in-game hints (such as the "Reveal a Letter" hint on your final guess) require watching a short rewarded video ad. Watching the ad is entirely voluntary — you can always skip the hint and play without it.
+  </div>
+
+  <p>When you choose to watch a rewarded ad, a third-party advertising SDK may collect and process data to deliver and measure the ad. This may include:</p>
+  <ul>
+    <li>Device identifiers (Advertising ID on Android, or a cookie-based identifier on web)</li>
+    <li>IP address (used to determine approximate region for ad targeting)</li>
+    <li>Browser or device type and operating system version</li>
+    <li>Ad interaction data (whether the ad was watched, skipped, or completed)</li>
+  </ul>
+
+  <p>This data is collected and processed by the ad network, not by Tickerdle directly. We do not receive or store any personally identifiable information from ad interactions.</p>
+
+  <p>Ad networks we use or plan to use:</p>
+  <ul>
+    <li><strong>Google AdSense / AdMob</strong> — subject to <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>. You can opt out of personalised ads at <a href="https://adssettings.google.com" target="_blank" rel="noopener">adssettings.google.com</a>.</li>
+  </ul>
+
+  <p>You are never required to watch an ad. All core gameplay — daily puzzles, endless mode, higher/lower mode, and leaderboards — remains completely free with no ads involved.</p>
 
   <h2>What we do NOT collect</h2>
   <ul>
     <li>No real names, email addresses, or passwords</li>
-    <li>No location data</li>
+    <li>No precise location data</li>
     <li>No payment information</li>
-    <li>No data from third-party services or advertisers</li>
-    <li>No tracking cookies</li>
+    <li>No tracking cookies placed by Tickerdle itself</li>
+    <li>No data sold or rented to third parties</li>
   </ul>
 
   <h2>How we use your data</h2>
   <ul>
     <li>Your UUID and name are used solely to display your score on the leaderboard</li>
     <li>Bug reports are used only to fix issues and are not shared with anyone</li>
-    <li>We do not sell, rent, or share any data with third parties</li>
+    <li>We do not sell, rent, or share any of your data with third parties (ad networks handle their own data independently under their own policies)</li>
   </ul>
 
   <h2>Data storage</h2>
-  <p>Game state, your name, and UUID are stored locally in your browser's localStorage — we do not store these on our servers beyond what is needed for leaderboard functionality. Server-side leaderboard data is stored on a private VPS and is not shared with any third party.</p>
+  <p>Game state, your name, and UUID are stored locally in your browser's localStorage. Server-side leaderboard data is stored on a private VPS and is not shared with any third party.</p>
+
+  <h2>Your choices</h2>
+  <ul>
+    <li><strong>Opt out of personalised ads</strong> — visit <a href="https://adssettings.google.com" target="_blank" rel="noopener">adssettings.google.com</a> or use your device's advertising settings (Settings → Privacy → Advertising on Android).</li>
+    <li><strong>Skip rewarded hints</strong> — you can always decline to watch an ad. The hint is optional; no core gameplay feature is locked behind an ad.</li>
+    <li><strong>Delete your local data</strong> — clear your browser's localStorage or app data to remove your UUID, name, and saved game state.</li>
+  </ul>
 
   <h2>Children</h2>
-  <p>Tickerdle is not directed at children under 13. We do not knowingly collect any personal information from children.</p>
+  <p>Tickerdle is not directed at children under 13. We do not knowingly collect any personal information from children. Rewarded ads are also not shown to users identified as under 13.</p>
 
   <h2>Changes to this policy</h2>
   <p>We may update this policy occasionally. The "last updated" date at the top will reflect any changes. Continued use of the game after changes constitutes acceptance of the updated policy.</p>

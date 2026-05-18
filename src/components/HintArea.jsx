@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useGame } from '../context/GameContext';
 import HintPanel from './HintPanel';
+import AdRewardModal from './AdRewardModal';
 import { MAXATTEMPTS } from '../utils/gameLogic';
 
 /**
@@ -17,6 +18,7 @@ export default function HintArea() {
     guesses, evaluations, won, gameOver, target, mode,
     revealedLetterPos, revealLetter,
   } = useGame();
+  const [adOpen, setAdOpen] = useState(false);
 
   // Only show hints in wordle modes
   if (mode !== 'daily' && mode !== 'endless') return null;
@@ -44,15 +46,25 @@ export default function HintArea() {
       {/* ── Auto hint panel ─────────────────────────────────────────────── */}
       {autoHintVisible && <HintPanel />}
 
-      {/* ── 🎯 Reveal a Letter — only on the 6th guess ──────────────────── */}
+      {/* ── 🎯 Reveal a Letter — only on the 6th guess, gated by an ad ──── */}
       {showRevealBtn && (
         <button
-          onClick={revealLetter}
+          onClick={() => setAdOpen(true)}
           className="px-4 py-1.5 rounded-md text-xs font-semibold border border-partial/60 text-partial bg-partial/10 hover:bg-partial/20 hover:border-partial transition-colors cursor-pointer"
         >
           🎯 Reveal a Letter
         </button>
       )}
+
+      {/* Ad reward modal — reward callback triggers the actual letter reveal */}
+      <AdRewardModal
+        isOpen={adOpen}
+        onClose={() => setAdOpen(false)}
+        onRewarded={() => {
+          revealLetter();
+          // modal stays open briefly so the "Reward unlocked!" screen shows
+        }}
+      />
     </div>
   );
 }
