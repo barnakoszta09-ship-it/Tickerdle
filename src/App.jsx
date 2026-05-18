@@ -26,32 +26,24 @@ function AppContent() {
 
   const isGameMode = mode === 'daily' || mode === 'endless';
 
-  // Primary: IntersectionObserver on the HTP section.
-  // Re-runs when the HTP section mounts/unmounts (showHowToPlay / isGameMode change)
-  // so the observer always attaches to the live DOM node, even if it rendered after
-  // the initial mount (e.g. showHowToPlay loaded from localStorage asynchronously).
-  useEffect(() => {
-    const el = htpRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setHtpVisible(entry.isIntersecting),
-      { threshold: 0.05 }   // fire as soon as 5 % of the section is visible
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [showHowToPlay, isGameMode]);
-
-  // Fallback: scroll listener on the container for browsers / WebViews that batch
-  // scroll-snap jumps without firing intermediate scroll events.
+  // Detect which snap section is active by watching the scroll position.
+  // We use three complementary events so snap jumps are always caught:
+  //   • scroll      — fires during smooth/momentum scrolling
+  //   • scrollend   — fires once the snap settles (Chrome 114+, FF 109+)
+  //   • pointerup   — catches finger-lift on touch devices where scroll may not fire
+  // Rule: if scrollTop >= 40 % of the container height we're in the HTP section.
   useEffect(() => {
     const el = snapRef.current;
     if (!el) return;
-    const handler = () => setHtpVisible(el.scrollTop > el.clientHeight * 0.15);
-    el.addEventListener('scroll', handler, { passive: true });
-    el.addEventListener('scrollend', handler, { passive: true });
+    const check = () => setHtpVisible(el.scrollTop >= el.clientHeight * 0.4);
+    check(); // run once on mount in case page loaded mid-scroll
+    el.addEventListener('scroll',    check, { passive: true });
+    el.addEventListener('scrollend', check, { passive: true });
+    el.addEventListener('pointerup', check, { passive: true });
     return () => {
-      el.removeEventListener('scroll', handler);
-      el.removeEventListener('scrollend', handler);
+      el.removeEventListener('scroll',    check);
+      el.removeEventListener('scrollend', check);
+      el.removeEventListener('pointerup', check);
     };
   }, []);
 
