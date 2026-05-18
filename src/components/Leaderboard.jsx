@@ -18,8 +18,8 @@ export default function Leaderboard() {
     daily: 'Daily',
     endless: 'Endless',
     'higher-lower': 'Higher or Lower',
-    crypto: '🪙 Crypto H/L',
-    'mixed-hl': '🔀 Mixed H/L',
+    crypto: '💎 Crypto H/L',
+    'mixed-hl': '🎲 Mixed H/L',
   };
 
   return (
@@ -113,10 +113,10 @@ export default function Leaderboard() {
             <p>📊 <span className="text-terminal-text font-semibold">Higher or Lower</span> — how many consecutive correct higher/lower comparisons you got in one session.</p>
           )}
           {selectedMode === 'crypto' && (
-            <p>🪙 <span className="text-terminal-text font-semibold">Crypto H/L</span> — how many consecutive correct higher/lower comparisons between cryptocurrencies you got in one session.</p>
+            <p>💎 <span className="text-terminal-text font-semibold">Crypto H/L</span> — how many consecutive correct higher/lower comparisons between cryptocurrencies you got in one session.</p>
           )}
           {selectedMode === 'mixed-hl' && (
-            <p>🔀 <span className="text-terminal-text font-semibold">Mixed H/L</span> — stocks and crypto mixed together. How many consecutive correct market cap comparisons in one session.</p>
+            <p>🎲 <span className="text-terminal-text font-semibold">Mixed H/L</span> — stocks and crypto mixed together. How many consecutive correct market cap comparisons in one session.</p>
           )}
         </div>
       </div>
