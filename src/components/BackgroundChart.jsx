@@ -150,21 +150,19 @@ const maskStyle = { WebkitMaskImage: MASK_H, maskImage: MASK_H };
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function BackgroundChart() {
-  const { mode, sessionId, chartStyle = 'line' } = useGame();
-  const [prices, setPrices] = useState(null);
-  const [ohlc,   setOhlc]   = useState(null);
+  const { target, mode, chartStyle = 'line' } = useGame();
+  const [prices, setPrices] = useState(null); // close prices
+  const [ohlc,   setOhlc]   = useState(null); // [{o,h,l,c}]
   const abortRef = useRef(null);
 
   const isGameMode = mode === 'daily' || mode === 'endless';
-  // Cache key: 'daily' for daily mode, sessionId for endless
-  const cacheKey = mode === 'daily' ? 'daily' : (sessionId ?? null);
 
   useEffect(() => {
-    if (!isGameMode || !cacheKey) { setPrices(null); setOhlc(null); return; }
+    if (!target || !isGameMode) { setPrices(null); setOhlc(null); return; }
 
-    if (priceCache[cacheKey]) {
-      setPrices(priceCache[cacheKey].prices);
-      setOhlc(priceCache[cacheKey].ohlc);
+    if (priceCache[target]) {
+      setPrices(priceCache[target].prices);
+      setOhlc(priceCache[target].ohlc);
       return;
     }
 
@@ -174,10 +172,12 @@ export default function BackgroundChart() {
 
     (async () => {
       try {
-        // Both modes hit our own backend — ticker is never exposed to client
+        // Daily mode: server already knows the ticker — don't expose it.
+        // Endless mode: ticker is still client-side, pass it as a query param.
+        // Both paths hit our own backend, so no CORS/proxy needed.
         const url = mode === 'daily'
           ? `${API_BASE}/api/chart/daily`
-          : `${API_BASE}/api/chart/endless?sessionId=${encodeURIComponent(sessionId)}`;
+          : `${API_BASE}/api/chart/ticker?ticker=${encodeURIComponent(target)}`;
 
         const res = await fetch(url, { signal: ac.signal });
         if (!res.ok) return;
@@ -185,7 +185,7 @@ export default function BackgroundChart() {
         const { prices: fetchedPrices, ohlc: fetchedOhlc } = await res.json();
         if (!fetchedPrices || fetchedPrices.length < 10) return;
 
-        priceCache[cacheKey] = { prices: fetchedPrices, ohlc: fetchedOhlc ?? [] };
+        priceCache[target] = { prices: fetchedPrices, ohlc: fetchedOhlc ?? [] };
         if (!ac.signal.aborted) {
           setPrices(fetchedPrices);
           setOhlc(fetchedOhlc ?? []);
@@ -196,7 +196,7 @@ export default function BackgroundChart() {
     })();
 
     return () => ac.abort();
-  }, [cacheKey, isGameMode]);
+  }, [target, isGameMode]);
 
   if (!isGameMode) return null;
   if (chartStyle === 'candle' && (!ohlc || ohlc.length < 10)) return null;

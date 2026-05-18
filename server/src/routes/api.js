@@ -20,7 +20,6 @@
 
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { Resend } from 'resend';
 import { appendFileSync, mkdirSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -30,17 +29,12 @@ const DATA_DIR   = join(__dirname, '../../../data');
 const BUG_FILE   = join(DATA_DIR, 'bug-reports.ndjson');
 import {
   TICKERS,
-  TICKER_INFO,
   getDailyTicker,
   getRandomTicker,
   isValidTicker,
   getDailySeed,
 } from '../data/tickers.js';
 import { evaluateGuess, MAX_ATTEMPTS } from '../utils/gameLogic.js';
-import { getMarketCapTier } from '../data/marketCaps.js';
-
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || null;
 
 const router = Router();
 
@@ -66,24 +60,16 @@ function todayString() {
   return new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
 }
 
-function dailyKey(playerId) {
-  return `${playerId}:${todayString()}`;
+function dailyKey(ip) {
+  return `${ip}:${todayString()}`;
 }
 
-function getOrCreateDailyState(playerId) {
-  const key = dailyKey(playerId);
+function getOrCreateDailyState(ip) {
+  const key = dailyKey(ip);
   if (!dailyState.has(key)) {
     dailyState.set(key, { guesses: [], evaluations: [], won: false, gameOver: false });
   }
   return dailyState.get(key);
-}
-
-/** Returns { sector, marketCapTier } for a ticker — used in hint responses. */
-function getHintMetadata(ticker) {
-  return {
-    sector:       TICKER_INFO[ticker]?.sector ?? 'Unknown',
-    marketCapTier: getMarketCapTier(ticker),
-  };
 }
 
 /** Fetch OHLC price history from Yahoo Finance (server-side — no CORS issue).
@@ -138,21 +124,19 @@ async function fetchPriceHistory(ticker) {
  * Returns today's ticker LENGTH and date — never the ticker itself.
  */
 router.get('/daily', (req, res) => {
-  const playerId = req.query.playerId ?? req.ip;
-  const ticker   = getDailyTicker();
-  const state    = getOrCreateDailyState(playerId);
+  const ticker = getDailyTicker();
+  const state  = getOrCreateDailyState(req.ip);
 
   res.json({
     date:        todayString(),
     length:      ticker.length,
     puzzleNum:   getDailySeed(),
-    guesses:     state.guesses,
-    evaluations: state.evaluations,
     attempts:    state.guesses.length,
     gameOver:    state.gameOver,
     won:         state.won,
-    // Include hint metadata if 3+ guesses made (safe — doesn't reveal ticker)
-    hintMetadata: state.guesses.length >= 3 ? getHintMetadata(ticker) : null,
+    // Re-send evaluations so the client can restore state after a page refresh.
+    // Guesses are not included — client stored them in localStorage.
+    evaluations: state.evaluations,
   });
 });
 
@@ -162,7 +146,7 @@ router.get('/daily', (req, res) => {
  * Returns the evaluation for this guess without revealing the answer.
  */
 router.post('/evaluate', (req, res) => {
-  const { mode = 'daily', guess, sessionId, playerId } = req.body ?? {};
+  const { mode = 'daily', guess, sessionId } = req.body ?? {};
 
   if (!guess || typeof guess !== 'string') {
     return res.status(400).json({ error: 'guess is required' });
@@ -170,14 +154,14 @@ router.post('/evaluate', (req, res) => {
 
   const normalized = guess.toUpperCase().trim();
 
+  // Validate the ticker exists
   if (!isValidTicker(normalized)) {
     return res.status(422).json({ error: 'invalid_ticker', valid: false });
   }
 
   if (mode === 'daily') {
-    const pid    = playerId ?? req.ip;
     const ticker = getDailyTicker();
-    const state  = getOrCreateDailyState(pid);
+    const state  = getOrCreateDailyState(req.ip);
 
     if (state.gameOver) {
       return res.status(409).json({ error: 'game_over', gameOver: true, won: state.won });
@@ -194,11 +178,9 @@ router.post('/evaluate', (req, res) => {
     return res.json({
       evaluation,
       won,
-      gameOver:     state.gameOver,
+      gameOver:    state.gameOver,
       attemptsUsed: state.guesses.length,
       attemptsLeft: MAX_ATTEMPTS - state.guesses.length,
-      // Unlock hint metadata after 3 guesses (sector + market cap tier, no ticker)
-      hintMetadata: state.guesses.length >= 3 ? getHintMetadata(ticker) : null,
     });
   }
 
@@ -222,10 +204,9 @@ router.post('/evaluate', (req, res) => {
     return res.json({
       evaluation,
       won,
-      gameOver:     session.gameOver,
+      gameOver:    session.gameOver,
       attemptsUsed: session.guesses.length,
       attemptsLeft: MAX_ATTEMPTS - session.guesses.length,
-      hintMetadata: session.guesses.length >= 3 ? getHintMetadata(session.ticker) : null,
     });
   }
 
@@ -237,11 +218,10 @@ router.post('/evaluate', (req, res) => {
  * Returns the answer ONLY after the game is complete.
  */
 router.get('/reveal', (req, res) => {
-  const { mode = 'daily', sessionId, playerId } = req.query;
+  const { mode = 'daily', sessionId } = req.query;
 
   if (mode === 'daily') {
-    const pid   = playerId ?? req.ip;
-    const state = getOrCreateDailyState(pid);
+    const state = getOrCreateDailyState(req.ip);
     if (!state.gameOver) {
       return res.status(403).json({ error: 'game_not_over' });
     }
@@ -316,73 +296,6 @@ router.get('/endless/next', (req, res) => {
   if (sessionId) endlessSessions.delete(sessionId);
 
   res.json({ sessionId: newId, length: ticker.length });
-});
-
-/**
- * GET /api/endless/state?sessionId=uuid
- * Restore an existing endless session (e.g. after page reload).
- * Returns guesses + evaluations so the client can rebuild its state.
- * The ticker is only returned if the game is already over.
- */
-router.get('/endless/state', (req, res) => {
-  const { sessionId } = req.query;
-  const session = endlessSessions.get(sessionId);
-  if (!session) return res.status(404).json({ error: 'session_not_found' });
-
-  res.json({
-    length:      session.ticker.length,
-    guesses:     session.guesses,
-    evaluations: session.evaluations,
-    won:         session.won,
-    gameOver:    session.gameOver,
-    hintMetadata: session.guesses.length >= 3 ? getHintMetadata(session.ticker) : null,
-    // Only reveal ticker once game is over
-    ...(session.gameOver ? { ticker: session.ticker } : {}),
-  });
-});
-
-/**
- * POST /api/hint/reveal-letter
- * Body: { mode: "daily"|"endless", sessionId?, playerId? }
- * Returns a random letter+position that hasn't been correctly placed yet.
- * Only available on the final guess (MAX_ATTEMPTS - 1 guesses used).
- */
-router.post('/hint/reveal-letter', (req, res) => {
-  const { mode = 'daily', sessionId, playerId } = req.body ?? {};
-
-  let ticker, gameState;
-
-  if (mode === 'daily') {
-    const pid  = playerId ?? req.ip;
-    gameState  = getOrCreateDailyState(pid);
-    ticker     = getDailyTicker();
-  } else if (mode === 'endless') {
-    const session = endlessSessions.get(sessionId);
-    if (!session) return res.status(404).json({ error: 'session_not_found' });
-    gameState = session;
-    ticker    = session.ticker;
-  } else {
-    return res.status(400).json({ error: 'invalid mode' });
-  }
-
-  if (gameState.gameOver)                          return res.status(409).json({ error: 'game_over' });
-  if (gameState.guesses.length < MAX_ATTEMPTS - 1) return res.status(403).json({ error: 'not_available_yet' });
-
-  // Find positions not yet correctly placed in any previous guess
-  const correctPos = new Set();
-  gameState.evaluations.forEach(row =>
-    row.forEach((e, i) => { if (e === 'correct') correctPos.add(i); })
-  );
-
-  const candidates = ticker
-    .split('')
-    .map((char, i) => ({ pos: i, char }))
-    .filter(({ pos }) => !correctPos.has(pos));
-
-  if (candidates.length === 0) return res.status(400).json({ error: 'all_positions_correct' });
-
-  const pick = candidates[Math.floor(Math.random() * candidates.length)];
-  res.json({ pos: pick.pos, char: pick.char });
 });
 
 /**

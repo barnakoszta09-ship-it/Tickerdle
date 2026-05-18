@@ -116,10 +116,10 @@ export default function Modal() {
             </button>
           ) : mode === 'daily' && !won ? (
             <button
-              onClick={handleContinueEndless}
+              onClick={handleTryAgain}
               className="px-6 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
             >
-              Try Endless Mode
+              Try Again
             </button>
           ) : (
             <button

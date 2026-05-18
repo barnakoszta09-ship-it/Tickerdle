@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
-import { getDailySeed } from '../utils/tickers';
-import { MAXATTEMPTS, WORDLENGTH } from '../utils/gameLogic';
+import { getDailyTicker, getRandomTicker, getDailySeed, isValidTicker } from '../utils/tickers';
+import { evaluateGuess, MAXATTEMPTS, WORDLENGTH } from '../utils/gameLogic';
 import { getRandomHLPair } from '../utils/sp500';
 import { getRandomCryptoPair } from '../utils/cryptoData';
 import { getRandomMixedPair }  from '../utils/mixedHLData';
@@ -9,203 +9,185 @@ import { getOrCreatePlayerId } from '../utils/identity';
 const GameContext = createContext();
 
 const STORAGEKEY = 'tickerdlestate';
-const API        = '';   // same origin
 
 function todayDateStr() {
-  return new Date().toISOString().slice(0, 10);
+  return new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
 }
 
+// Loads the daily streak from localStorage, resetting it if the player
+// missed a calendar day (lastWonDate is more than 1 day ago).
 function loadDailyStreak() {
-  const saved   = parseInt(localStorage.getItem('tickerdle_dailyStreak') || '0', 10);
-  const lastWon = localStorage.getItem('tickerdle_lastWonDate') || null;
-  const streak  = isNaN(saved) ? 0 : saved;
+  const saved      = parseInt(localStorage.getItem('tickerdle_dailyStreak') || '0', 10);
+  const lastWon    = localStorage.getItem('tickerdle_lastWonDate') || null;
+  const streak     = isNaN(saved) ? 0 : saved;
   if (!lastWon) return streak;
-  const diff = Math.round((Date.parse(todayDateStr()) - Date.parse(lastWon)) / 86400000);
-  if (diff > 1) { localStorage.setItem('tickerdle_dailyStreak', '0'); return 0; }
+  const diffDays   = Math.round((Date.parse(todayDateStr()) - Date.parse(lastWon)) / 86400000);
+  if (diffDays > 1) {
+    localStorage.setItem('tickerdle_dailyStreak', '0');
+    return 0;
+  }
   return streak;
 }
 
-function loadSettings() {
-  return {
-    playerName:    localStorage.getItem('tickerdle_playerName') || 'Anonymous',
-    soundEnabled:  localStorage.getItem('tickerdle_soundEnabled') !== 'false',
-    soundVolume:   (() => { const v = parseFloat(localStorage.getItem('tickerdle_soundVolume')); return isNaN(v) ? 0.5 : v; })(),
-    chartStyle:    localStorage.getItem('tickerdle_chartStyle') || 'line',
-    showHowToPlay: localStorage.getItem('tickerdle_showHTP') !== 'false',
-    hintsEnabled:  localStorage.getItem('tickerdle_hintsEnabled') !== 'false',
-  };
-}
-
-// ── Fresh state builders ────────────────────────────────────────────────────
-
-function createFreshHLState(mode) {
-  const pair = mode === 'crypto'    ? getRandomCryptoPair()
-             : mode === 'mixed-hl' ? getRandomMixedPair()
-             : getRandomHLPair();
-  return {
-    mode,
-    hlCurrent: pair.first,
-    hlNext: pair.second,
-    hlStreak: 0,
-    hlGuessed: null,
-    hlGameOver: false,
-    hlShowMarketCap: true,
-    scoreSubmitted: false,
-  };
-}
-
-function createFreshWordleState(mode) {
-  return {
-    mode,
-    // Target is NEVER stored client-side until game over — set by server init
-    target:           null,
-    targetLength:     null,
-    sessionId:        null,
-    guesses:          [],
-    evaluations:      [],
-    currentGuess:     '',
-    gameOver:         false,
-    won:              false,
-    shake:            false,
-    revealRow:        null,
-    dailySeed:        mode === 'daily' ? getDailySeed() : null,
-    streak:           0,
-    dailyStreak:      mode === 'daily' ? loadDailyStreak() : 0,
-    scoreSubmitted:   false,
-    hintUsed:         false,
-    hintMetadata:     null,
-    revealedLetterPos:  null,
-    revealedLetterChar: null,
-  };
-}
-
 function getInitialState(mode = 'daily') {
-  const saved    = localStorage.getItem(STORAGEKEY);
-  const settings = loadSettings();
+  const saved = localStorage.getItem(STORAGEKEY);
+  const playerName    = localStorage.getItem('tickerdle_playerName') || 'Anonymous';
+  const soundEnabled  = localStorage.getItem('tickerdle_soundEnabled') !== 'false';
+  const rawVolume     = parseFloat(localStorage.getItem('tickerdle_soundVolume'));
+  const soundVolume   = isNaN(rawVolume) ? 0.5 : rawVolume;
+  const chartStyle    = localStorage.getItem('tickerdle_chartStyle') || 'line';
+  const showHowToPlay = localStorage.getItem('tickerdle_showHTP') !== 'false';
+  const hintsEnabled  = localStorage.getItem('tickerdle_hintsEnabled') !== 'false';
+  const soundSettings = { playerName, soundEnabled, soundVolume, chartStyle, showHowToPlay, hintsEnabled };
 
   if (saved) {
     const parsed = JSON.parse(saved);
     const currentSeed = getDailySeed();
 
-    // HL modes — no server interaction, keep as-is
-    if ((mode === 'higher-lower' || mode === 'crypto' || mode === 'mixed-hl') && parsed.mode === mode) {
-      return { ...parsed, ...settings, scoreSubmitted: false };
-    }
-
-    // New calendar day → fresh daily
     if (mode === 'daily' && parsed.mode === 'daily' && parsed.dailySeed !== currentSeed) {
-      return { ...createFreshWordleState('daily'), ...settings };
+      // New calendar day — start fresh. Daily streak lives in its own localStorage keys.
+      return { ...createFreshState('daily'), ...soundSettings };
     }
 
-    if (parsed.mode === mode && (mode === 'daily' || mode === 'endless')) {
+    if (mode === 'endless' && parsed.mode === 'daily' && parsed.gameOver) {
+      return { ...createFreshState('endless'), dailyState: parsed, ...soundSettings };
+    }
+
+    if (parsed.mode === mode) {
       return {
         ...parsed,
-        ...settings,
-        // ── Security: never restore target before game is over ──────────
-        target:       parsed.gameOver ? (parsed.target ?? null) : null,
-        targetLength: parsed.targetLength ?? (parsed.target ? parsed.target.length : null),
-        sessionId:    parsed.sessionId ?? null,
-        hintMetadata: parsed.hintMetadata ?? null,
+        ...soundSettings,
         scoreSubmitted: false,
+        // ensure hint fields exist for saves that pre-date this feature
         hintUsed: parsed.hintUsed ?? false,
-        revealedLetterPos:  parsed.revealedLetterPos ?? null,
+        revealedLetterPos: parsed.revealedLetterPos ?? null,
         revealedLetterChar: parsed.revealedLetterChar ?? null,
       };
     }
 
-    // Cross-mode switch fallback
     if (parsed.mode === 'daily' && mode === 'endless' && parsed.endlessState) {
-      return { ...parsed.endlessState, ...settings };
+      return { ...parsed.endlessState, ...soundSettings };
     }
     if (parsed.mode === 'endless' && mode === 'daily' && parsed.dailyState) {
-      return { ...parsed.dailyState, ...settings };
+      return { ...parsed.dailyState, ...soundSettings };
     }
   }
 
-  const isHL = mode === 'higher-lower' || mode === 'crypto' || mode === 'mixed-hl';
-  return { ...(isHL ? createFreshHLState(mode) : createFreshWordleState(mode)), ...settings };
+  return { ...createFreshState(mode), ...soundSettings };
 }
 
-// ── Reducer ─────────────────────────────────────────────────────────────────
+function createFreshState(mode) {
+  if (mode === 'higher-lower' || mode === 'crypto' || mode === 'mixed-hl') {
+    const pair = mode === 'crypto'    ? getRandomCryptoPair()
+               : mode === 'mixed-hl' ? getRandomMixedPair()
+               : getRandomHLPair();
+    return {
+      mode,
+      hlCurrent: pair.first,
+      hlNext: pair.second,
+      hlStreak: 0,
+      hlGuessed: null,
+      hlGameOver: false,
+      hlShowMarketCap: true,
+      scoreSubmitted: false,
+    };
+  }
+
+  const target = mode === 'daily' ? getDailyTicker() : getRandomTicker();
+  return {
+    mode,
+    target,
+    guesses: [],
+    evaluations: [],
+    currentGuess: '',
+    gameOver: false,
+    won: false,
+    shake: false,
+    revealRow: null,
+    dailySeed: mode === 'daily' ? getDailySeed() : null,
+    streak: 0,
+    dailyStreak: mode === 'daily' ? loadDailyStreak() : 0,
+    usedTickers: mode === 'endless' ? [target] : [],
+    scoreSubmitted: false,
+    // Hint system
+    hintUsed: false,
+    revealedLetterPos: null,
+    revealedLetterChar: null,
+  };
+}
 
 function gameReducer(state, action) {
   switch (action.type) {
-
-    // ── Async game result (replaces old SUBMITGUESS) ─────────────────────
-    case 'GUESS_RESULT': {
-      const newGuesses     = [...state.guesses, action.guess];
-      const newEvaluations = [...state.evaluations, action.evaluation];
-      return {
-        ...state,
-        guesses:      newGuesses,
-        evaluations:  newEvaluations,
-        currentGuess: '',
-        gameOver:     action.gameOver,
-        won:          action.won,
-        revealRow:    newGuesses.length - 1,
-        streak: state.mode === 'endless' && action.won ? state.streak + 1 : state.streak,
-        hintMetadata: action.hintMetadata ?? state.hintMetadata,
-      };
-    }
-
-    // ── Server game init (daily load / endless new+restore) ──────────────
-    case 'GAME_INIT': {
-      return {
-        ...state,
-        mode:         action.mode,
-        targetLength: action.targetLength,
-        sessionId:    action.sessionId ?? null,
-        target:       action.gameOver ? (action.target ?? null) : null,
-        guesses:      action.guesses      ?? [],
-        evaluations:  action.evaluations  ?? [],
-        currentGuess: '',
-        gameOver:     action.gameOver  ?? false,
-        won:          action.won       ?? false,
-        shake:        false,
-        revealRow:    null,
-        scoreSubmitted: false,
-        hintUsed:     false,
-        hintMetadata: action.hintMetadata ?? null,
-        revealedLetterPos:  null,
-        revealedLetterChar: null,
-        streak:       action.streak !== undefined ? action.streak : state.streak,
-        dailySeed:    action.mode === 'daily' ? getDailySeed() : state.dailySeed,
-        dailyStreak:  action.dailyStreak !== undefined ? action.dailyStreak : state.dailyStreak,
-      };
-    }
-
-    case 'SET_TARGET': {
-      return { ...state, target: action.target };
-    }
-
-    case 'SET_HINT_METADATA': {
-      return { ...state, hintMetadata: action.hintMetadata };
-    }
-
-    case 'SET_REVEALED_LETTER': {
-      return {
-        ...state,
-        hintUsed:           true,
-        revealedLetterPos:  action.pos,
-        revealedLetterChar: action.char,
-      };
-    }
-
-    // ── Keyboard input ───────────────────────────────────────────────────
     case 'ADDLETTER': {
-      const tLen    = state.targetLength ?? WORDLENGTH;
-      const freeLen = state.revealedLetterPos !== null ? tLen - 1 : tLen;
-      if (state.gameOver || state.currentGuess.length >= freeLen) return state;
-      return { ...state, currentGuess: state.currentGuess + action.letter };
+      const targetLength = state.target ? state.target.length : WORDLENGTH;
+      // When a letter is locked, the player fills (targetLength - 1) free positions
+      const freeLen = state.revealedLetterPos !== null ? targetLength - 1 : targetLength;
+      if (state.gameOver || state.currentGuess.length >= freeLen) {
+        return state;
+      }
+      return {
+        ...state,
+        currentGuess: state.currentGuess + action.letter,
+      };
     }
 
     case 'DELETELETTER': {
-      if (state.gameOver || state.currentGuess.length === 0) return state;
-      return { ...state, currentGuess: state.currentGuess.slice(0, -1) };
+      if (state.gameOver || state.currentGuess.length === 0) {
+        return state;
+      }
+      return {
+        ...state,
+        currentGuess: state.currentGuess.slice(0, -1),
+      };
     }
 
-    case 'SHAKE': {
-      return { ...state, shake: true };
+    case 'SUBMITGUESS': {
+      const rawGuess = state.currentGuess.toUpperCase();
+      const targetLength = state.target ? state.target.length : WORDLENGTH;
+      // When a letter is locked, the player only typed (targetLength - 1) free chars
+      const freeLen = state.revealedLetterPos !== null ? targetLength - 1 : targetLength;
+
+      if (state.gameOver || rawGuess.length !== freeLen) {
+        return state;
+      }
+
+      // Reconstruct the full guess by inserting the locked letter at its position
+      let guess = rawGuess;
+      if (state.revealedLetterPos !== null && state.revealedLetterChar) {
+        const arr = [];
+        let freeIdx = 0;
+        for (let i = 0; i < targetLength; i++) {
+          if (i === state.revealedLetterPos) {
+            arr.push(state.revealedLetterChar);
+          } else {
+            arr.push(rawGuess[freeIdx++] || '');
+          }
+        }
+        guess = arr.join('');
+      }
+
+      if (!isValidTicker(guess)) {
+        return { ...state, shake: true };
+      }
+
+      const evaluation = evaluateGuess(guess, state.target);
+      const newGuesses = [...state.guesses, guess];
+      const newEvaluations = [...state.evaluations, evaluation];
+      const won = guess === state.target;
+      const gameOver = won || newGuesses.length >= MAXATTEMPTS;
+
+      return {
+        ...state,
+        guesses: newGuesses,
+        evaluations: newEvaluations,
+        currentGuess: '',
+        gameOver,
+        won,
+        revealRow: newGuesses.length - 1,
+        // Daily streak is managed by a provider effect (localStorage-based).
+        // Only increment streak here for endless mode.
+        streak: state.mode === 'endless' && won ? state.streak + 1 : state.streak,
+      };
     }
 
     case 'CLEARSHAKE': {
@@ -220,312 +202,241 @@ function gameReducer(state, action) {
       return getInitialState(action.mode);
     }
 
-    case 'RESETGAME': {
-      // Used by H/L "Play Again" — wordle modes use initGame() instead
+    case 'NEWENDLESSGAME': {
+      const newTarget = getRandomTicker(state.usedTickers);
       return {
-        ...createFreshHLState(state.mode),
-        playerName:    state.playerName,
-        playerId:      state.playerId,
-        soundEnabled:  state.soundEnabled,
-        soundVolume:   state.soundVolume,
-        chartStyle:    state.chartStyle,
-        showHowToPlay: state.showHowToPlay,
-        hintsEnabled:  state.hintsEnabled,
+        ...createFreshState('endless'),
+        streak: state.won ? state.streak : 0,
+        usedTickers: [...state.usedTickers, newTarget],
+        target: newTarget,
+        soundEnabled: state.soundEnabled,
+        soundVolume: state.soundVolume,
       };
     }
 
-    // ── Higher/Lower ─────────────────────────────────────────────────────
+    case 'RESETGAME': {
+      return {
+        ...createFreshState(state.mode),
+        playerName: state.playerName,
+        playerId: state.playerId,
+        soundEnabled: state.soundEnabled,
+        soundVolume: state.soundVolume,
+        chartStyle: state.chartStyle,
+        showHowToPlay: state.showHowToPlay,
+      };
+    }
+
     case 'MAKE_HL_GUESS': {
       if (state.hlGameOver) return state;
-      const guess     = action.guess;
-      const isTie     = state.hlNext.marketCap === state.hlCurrent.marketCap;
+
+      const guess = action.guess;
+      const isTie = state.hlNext.marketCap === state.hlCurrent.marketCap;
       const isCorrect = isTie ||
-        (guess === 'higher' && state.hlNext.marketCap > state.hlCurrent.marketCap) ||
-        (guess === 'lower'  && state.hlNext.marketCap < state.hlCurrent.marketCap);
+                        (guess === 'higher' && state.hlNext.marketCap > state.hlCurrent.marketCap) ||
+                        (guess === 'lower'  && state.hlNext.marketCap < state.hlCurrent.marketCap);
 
       if (isCorrect) {
         const newCurrent = state.hlNext;
         const pair = state.mode === 'crypto'    ? getRandomCryptoPair(newCurrent.symbol)
-                   : state.mode === 'mixed-hl' ? getRandomMixedPair(newCurrent.symbol)
-                   : getRandomHLPair(newCurrent.symbol);
-        return { ...state, hlCurrent: newCurrent, hlNext: pair.second,
-                 hlStreak: state.hlStreak + 1, hlGuessed: true, hlShowMarketCap: false };
+               : state.mode === 'mixed-hl' ? getRandomMixedPair(newCurrent.symbol)
+               : getRandomHLPair(newCurrent.symbol);
+        return {
+          ...state,
+          hlCurrent: newCurrent,
+          hlNext: pair.second,
+          hlStreak: state.hlStreak + 1,
+          hlGuessed: true,
+          hlShowMarketCap: false,
+        };
+      } else {
+        return {
+          ...state,
+          hlGameOver: true,
+          hlGuessed: false,
+        };
       }
-      return { ...state, hlGameOver: true, hlGuessed: false };
     }
 
     case 'CLEAR_HL_GUESS': {
-      return { ...state, hlGuessed: null, hlShowMarketCap: true };
+      return {
+        ...state,
+        hlGuessed: null,
+        hlShowMarketCap: true,
+      };
     }
 
-    // ── Daily streak ─────────────────────────────────────────────────────
     case 'SET_DAILY_STREAK': {
       return { ...state, dailyStreak: action.dailyStreak };
     }
 
-    // ── Settings ─────────────────────────────────────────────────────────
-    case 'SET_SCORE_SUBMITTED':  return { ...state, scoreSubmitted: true };
-    case 'SET_PLAYER_NAME':      return { ...state, playerName:    action.playerName };
-    case 'SET_SOUND_ENABLED':    return { ...state, soundEnabled:  action.soundEnabled };
-    case 'SET_SOUND_VOLUME':     return { ...state, soundVolume:   action.soundVolume };
-    case 'SET_CHART_STYLE':      return { ...state, chartStyle:    action.chartStyle };
-    case 'SET_SHOW_HTP':         return { ...state, showHowToPlay: action.showHowToPlay };
-    case 'SET_HINTS_ENABLED':    return { ...state, hintsEnabled:  action.hintsEnabled };
-    case 'USE_HINT':             return { ...state, hintUsed: true };
+    case 'SET_SCORE_SUBMITTED': {
+      return { ...state, scoreSubmitted: true };
+    }
 
-    default: return state;
+    case 'SET_PLAYER_NAME': {
+      return { ...state, playerName: action.playerName };
+    }
+
+    case 'SET_SOUND_ENABLED': {
+      return { ...state, soundEnabled: action.soundEnabled };
+    }
+
+    case 'SET_SOUND_VOLUME': {
+      return { ...state, soundVolume: action.soundVolume };
+    }
+
+    case 'SET_CHART_STYLE': {
+      return { ...state, chartStyle: action.chartStyle };
+    }
+
+    case 'SET_SHOW_HTP': {
+      return { ...state, showHowToPlay: action.showHowToPlay };
+    }
+
+    case 'SET_HINTS_ENABLED': {
+      return { ...state, hintsEnabled: action.hintsEnabled };
+    }
+
+    case 'USE_HINT': {
+      return { ...state, hintUsed: true };
+    }
+
+    // Picks a random letter that hasn't been correctly placed yet and locks it.
+    case 'COMPUTE_AND_REVEAL_LETTER': {
+      if (state.revealedLetterPos !== null || !state.target) return state;
+      const correctPositions = new Set();
+      state.evaluations.forEach(row =>
+        row.forEach((e, i) => { if (e === 'correct') correctPositions.add(i); })
+      );
+      const candidates = state.target
+        .split('')
+        .map((char, i) => ({ pos: i, char }))
+        .filter(({ pos }) => !correctPositions.has(pos));
+      if (candidates.length === 0) return state;
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      return { ...state, revealedLetterPos: pick.pos, revealedLetterChar: pick.char };
+    }
+
+    default:
+      return state;
   }
 }
 
-// ── Provider ─────────────────────────────────────────────────────────────────
-
 export function GameProvider({ children }) {
   const [state, dispatch] = useReducer(gameReducer, 'daily', getInitialState);
+
+  // Stable player UUID — generated once on first visit, persists in localStorage
   const playerId = useRef(getOrCreatePlayerId()).current;
 
-  // Always-current state ref for async callbacks
-  const stateRef = useRef(state);
-  useEffect(() => { stateRef.current = state; }, [state]);
-
-  // Persist state (never include target if game is not over)
   useEffect(() => {
-    const toSave = state.gameOver
-      ? state
-      : { ...state, target: null };   // keep target hidden in storage
-    localStorage.setItem(STORAGEKEY, JSON.stringify(toSave));
+    localStorage.setItem(STORAGEKEY, JSON.stringify(state));
   }, [state]);
 
-  // ── Daily streak effect ──────────────────────────────────────────────────
+  // Daily streak — runs only on daily wins, never touches endless/HL.
   useEffect(() => {
     if (state.mode !== 'daily' || !state.gameOver || !state.won) return;
-    const today   = todayDateStr();
+    const today = todayDateStr();
     const lastWon = localStorage.getItem('tickerdle_lastWonDate');
-    if (lastWon === today) return;
+    if (lastWon === today) return; // already counted today's win
     const newStreak = state.dailyStreak + 1;
     localStorage.setItem('tickerdle_dailyStreak', String(newStreak));
     localStorage.setItem('tickerdle_lastWonDate', today);
     dispatch({ type: 'SET_DAILY_STREAK', dailyStreak: newStreak });
   }, [state.gameOver, state.won, state.mode]);
 
-  // ── Shake / reveal timers ────────────────────────────────────────────────
   useEffect(() => {
     if (state.shake) {
-      const t = setTimeout(() => dispatch({ type: 'CLEARSHAKE' }), 500);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => dispatch({ type: 'CLEARSHAKE' }), 500);
+      return () => clearTimeout(timer);
     }
   }, [state.shake]);
 
   useEffect(() => {
     if (state.revealRow !== null) {
-      const t = setTimeout(() => dispatch({ type: 'CLEARREVEAL' }), 2000);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => dispatch({ type: 'CLEARREVEAL' }), 2000);
+      return () => clearTimeout(timer);
     }
   }, [state.revealRow]);
 
+  const addLetter = useCallback((letter) => {
+    dispatch({ type: 'ADDLETTER', letter: letter.toUpperCase() });
+  }, []);
+
+  const deleteLetter = useCallback(() => {
+    dispatch({ type: 'DELETELETTER' });
+  }, []);
+
+  const submitGuess = useCallback(() => {
+    dispatch({ type: 'SUBMITGUESS' });
+  }, []);
+
+  const switchMode = useCallback((mode) => {
+    dispatch({ type: 'SWITCHMODE', mode });
+  }, []);
+
+  const newEndlessGame = useCallback(() => {
+    dispatch({ type: 'NEWENDLESSGAME' });
+  }, []);
+
+  const resetGame = useCallback(() => {
+    dispatch({ type: 'RESETGAME' });
+  }, []);
+
+  const makeHLGuess = useCallback((guess) => {
+    dispatch({ type: 'MAKE_HL_GUESS', guess });
+  }, []);
+
+  const setPlayerName = useCallback((name) => {
+    localStorage.setItem('tickerdle_playerName', name);
+    dispatch({ type: 'SET_PLAYER_NAME', playerName: name });
+  }, []);
+
+  const setSoundEnabled = useCallback((enabled) => {
+    localStorage.setItem('tickerdle_soundEnabled', enabled);
+    dispatch({ type: 'SET_SOUND_ENABLED', soundEnabled: enabled });
+  }, []);
+
+  const setSoundVolume = useCallback((volume) => {
+    localStorage.setItem('tickerdle_soundVolume', volume);
+    dispatch({ type: 'SET_SOUND_VOLUME', soundVolume: volume });
+  }, []);
+
+  const setChartStyle = useCallback((style) => {
+    localStorage.setItem('tickerdle_chartStyle', style);
+    dispatch({ type: 'SET_CHART_STYLE', chartStyle: style });
+  }, []);
+
+  const setShowHowToPlay = useCallback((value) => {
+    localStorage.setItem('tickerdle_showHTP', value);
+    dispatch({ type: 'SET_SHOW_HTP', showHowToPlay: value });
+  }, []);
+
+  const setHintsEnabled = useCallback((value) => {
+    localStorage.setItem('tickerdle_hintsEnabled', value);
+    dispatch({ type: 'SET_HINTS_ENABLED', hintsEnabled: value });
+  }, []);
+
+  const setScoreSubmitted = useCallback(() => {
+    dispatch({ type: 'SET_SCORE_SUBMITTED' });
+  }, []);
+
+  const useHint = useCallback(() => {
+    dispatch({ type: 'USE_HINT' });
+  }, []);
+
+  const revealLetter = useCallback(() => {
+    dispatch({ type: 'COMPUTE_AND_REVEAL_LETTER' });
+  }, []);
+
   useEffect(() => {
     if (state.hlGuessed !== null) {
-      const t = setTimeout(() => dispatch({ type: 'CLEAR_HL_GUESS' }), 1000);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => dispatch({ type: 'CLEAR_HL_GUESS' }), 1000);
+      return () => clearTimeout(timer);
     }
   }, [state.hlGuessed]);
 
-  // ── Server init: runs whenever mode switches to a wordle mode ────────────
-  const initGame = useCallback(async (mode) => {
-    if (mode !== 'daily' && mode !== 'endless') return;
-    try {
-      if (mode === 'daily') {
-        const res  = await fetch(`${API}/api/daily?playerId=${encodeURIComponent(playerId)}`);
-        const data = await res.json();
-        dispatch({
-          type:         'GAME_INIT',
-          mode:         'daily',
-          targetLength: data.length,
-          guesses:      data.guesses      ?? [],
-          evaluations:  data.evaluations  ?? [],
-          gameOver:     data.gameOver,
-          won:          data.won,
-          hintMetadata: data.hintMetadata ?? null,
-          dailyStreak:  loadDailyStreak(),
-        });
-        if (data.gameOver) {
-          const rv = await fetch(`${API}/api/reveal?mode=daily&playerId=${encodeURIComponent(playerId)}`);
-          if (rv.ok) {
-            const { ticker } = await rv.json();
-            dispatch({ type: 'SET_TARGET', target: ticker });
-          }
-        }
-      } else {
-        // Endless — try restoring existing session first
-        const s = stateRef.current;
-        if (s.sessionId) {
-          const rv = await fetch(`${API}/api/endless/state?sessionId=${s.sessionId}`);
-          if (rv.ok) {
-            const data = await rv.json();
-            dispatch({
-              type:         'GAME_INIT',
-              mode:         'endless',
-              sessionId:    s.sessionId,
-              targetLength: data.length,
-              guesses:      data.guesses      ?? [],
-              evaluations:  data.evaluations  ?? [],
-              gameOver:     data.gameOver,
-              won:          data.won,
-              hintMetadata: data.hintMetadata ?? null,
-              target:       data.ticker ?? null,
-            });
-            return;
-          }
-        }
-        // No valid session — start fresh
-        const res  = await fetch(`${API}/api/endless/new`);
-        const data = await res.json();
-        dispatch({
-          type:         'GAME_INIT',
-          mode:         'endless',
-          sessionId:    data.sessionId,
-          targetLength: data.length,
-          guesses:      [],
-          evaluations:  [],
-          gameOver:     false,
-          won:          false,
-        });
-      }
-    } catch (err) {
-      console.error('[initGame]', err);
-    }
-  }, [playerId]);
-
-  useEffect(() => {
-    if (state.mode === 'daily' || state.mode === 'endless') {
-      initGame(state.mode);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.mode]);
-
-  // ── Submit guess (async — calls /api/evaluate) ───────────────────────────
-  const submitGuess = useCallback(async () => {
-    const s = stateRef.current;
-    const { currentGuess, revealedLetterPos, revealedLetterChar,
-            targetLength, mode, sessionId, gameOver } = s;
-
-    if (gameOver || !targetLength) return;
-
-    const freeLen = revealedLetterPos !== null ? targetLength - 1 : targetLength;
-    const raw     = currentGuess.toUpperCase();
-    if (raw.length !== freeLen) return;
-
-    // Reconstruct full guess with locked letter
-    let guess = raw;
-    if (revealedLetterPos !== null && revealedLetterChar) {
-      const arr = [];
-      let fi = 0;
-      for (let i = 0; i < targetLength; i++) {
-        arr.push(i === revealedLetterPos ? revealedLetterChar : (raw[fi++] || ''));
-      }
-      guess = arr.join('');
-    }
-
-    try {
-      const body = { mode, guess, playerId };
-      if (mode === 'endless' && sessionId) body.sessionId = sessionId;
-
-      const res = await fetch(`${API}/api/evaluate`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(body),
-      });
-
-      if (res.status === 422) { dispatch({ type: 'SHAKE' }); return; }
-      if (!res.ok) return;
-
-      const data = await res.json();
-      dispatch({
-        type:         'GUESS_RESULT',
-        guess,
-        evaluation:   data.evaluation,
-        won:          data.won,
-        gameOver:     data.gameOver,
-        hintMetadata: data.hintMetadata ?? null,
-      });
-
-      if (data.gameOver) {
-        const url = mode === 'endless' && sessionId
-          ? `${API}/api/reveal?mode=endless&sessionId=${sessionId}`
-          : `${API}/api/reveal?mode=daily&playerId=${encodeURIComponent(playerId)}`;
-        const rv = await fetch(url);
-        if (rv.ok) {
-          const { ticker } = await rv.json();
-          dispatch({ type: 'SET_TARGET', target: ticker });
-        }
-      }
-    } catch (err) {
-      console.error('[submitGuess]', err);
-    }
-  }, [playerId]);
-
-  // ── New endless game (async) ─────────────────────────────────────────────
-  const newEndlessGame = useCallback(async () => {
-    const s        = stateRef.current;
-    const prevWon  = s.won;
-    const prevStreak = s.streak;
-    try {
-      const res  = await fetch(`${API}/api/endless/next?sessionId=${s.sessionId ?? ''}`);
-      const data = await res.json();
-      dispatch({
-        type:         'GAME_INIT',
-        mode:         'endless',
-        sessionId:    data.sessionId,
-        targetLength: data.length,
-        guesses:      [],
-        evaluations:  [],
-        gameOver:     false,
-        won:          false,
-        streak:       prevWon ? prevStreak + 1 : 0,
-      });
-    } catch (err) {
-      console.error('[newEndlessGame]', err);
-    }
-  }, []);
-
-  // ── Reveal letter hint (async — calls /api/hint/reveal-letter) ───────────
-  const revealLetter = useCallback(async () => {
-    const s = stateRef.current;
-    if (s.revealedLetterPos !== null) return; // already revealed
-    try {
-      const body = { mode: s.mode, playerId };
-      if (s.mode === 'endless' && s.sessionId) body.sessionId = s.sessionId;
-
-      const res = await fetch(`${API}/api/hint/reveal-letter`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(body),
-      });
-      if (!res.ok) return;
-      const { pos, char } = await res.json();
-      dispatch({ type: 'SET_REVEALED_LETTER', pos, char });
-    } catch (err) {
-      console.error('[revealLetter]', err);
-    }
-  }, [playerId]);
-
-  // ── Synchronous callbacks ────────────────────────────────────────────────
-  const addLetter    = useCallback((l)  => dispatch({ type: 'ADDLETTER',  letter: l.toUpperCase() }), []);
-  const deleteLetter = useCallback(()   => dispatch({ type: 'DELETELETTER' }), []);
-  const switchMode   = useCallback((m)  => dispatch({ type: 'SWITCHMODE', mode: m }), []);
-  const resetGame    = useCallback(()   => dispatch({ type: 'RESETGAME' }), []);
-  const makeHLGuess  = useCallback((g)  => dispatch({ type: 'MAKE_HL_GUESS', guess: g }), []);
-  const useHint      = useCallback(()   => dispatch({ type: 'USE_HINT' }), []);
-
-  const setPlayerName    = useCallback((v) => { localStorage.setItem('tickerdle_playerName',    v);      dispatch({ type: 'SET_PLAYER_NAME',   playerName:    v }); }, []);
-  const setSoundEnabled  = useCallback((v) => { localStorage.setItem('tickerdle_soundEnabled',  v);      dispatch({ type: 'SET_SOUND_ENABLED', soundEnabled:  v }); }, []);
-  const setSoundVolume   = useCallback((v) => { localStorage.setItem('tickerdle_soundVolume',   v);      dispatch({ type: 'SET_SOUND_VOLUME',  soundVolume:   v }); }, []);
-  const setChartStyle    = useCallback((v) => { localStorage.setItem('tickerdle_chartStyle',    v);      dispatch({ type: 'SET_CHART_STYLE',   chartStyle:    v }); }, []);
-  const setShowHowToPlay = useCallback((v) => { localStorage.setItem('tickerdle_showHTP',       v);      dispatch({ type: 'SET_SHOW_HTP',      showHowToPlay: v }); }, []);
-  const setHintsEnabled  = useCallback((v) => { localStorage.setItem('tickerdle_hintsEnabled',  v);      dispatch({ type: 'SET_HINTS_ENABLED', hintsEnabled:  v }); }, []);
-  const setScoreSubmitted = useCallback(()  => dispatch({ type: 'SET_SCORE_SUBMITTED' }), []);
-
   const value = {
-    ...state,
+    ...state, // includes dailyStreak from state
     playerId,
     addLetter,
     deleteLetter,
@@ -554,7 +465,9 @@ export function GameProvider({ children }) {
 }
 
 export function useGame() {
-  const ctx = useContext(GameContext);
-  if (!ctx) throw new Error('useGame must be used within a GameProvider');
-  return ctx;
+  const context = useContext(GameContext);
+  if (!context) {
+    throw new Error('useGame must be used within a GameProvider');
+  }
+  return context;
 }
