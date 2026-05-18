@@ -83,7 +83,7 @@ function AppContent() {
               <div className="w-full h-full overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <Leaderboard />
               </div>
-            ) : mode === 'higher-lower' ? (
+            ) : mode === 'higher-lower' || mode === 'crypto' ? (
               <HigherLowerGame />
             ) : (
               <>
@@ -107,7 +107,7 @@ function AppContent() {
             )}
           </main>
 
-          {mode !== 'higher-lower' && mode !== 'leaderboard' && <Modal />}
+          {mode !== 'higher-lower' && mode !== 'crypto' && mode !== 'leaderboard' && <Modal />}
         </div>
 
         {/* Section 2: How to Play — hidden in H/L and leaderboard modes */}

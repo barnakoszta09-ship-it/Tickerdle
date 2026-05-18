@@ -18,6 +18,7 @@ export default function Leaderboard() {
     daily: 'Daily',
     endless: 'Endless',
     'higher-lower': 'Higher or Lower',
+    crypto: '₿ Crypto H/L',
   };
 
   return (
@@ -62,7 +63,7 @@ export default function Leaderboard() {
                       Player
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-semibold text-terminal-muted uppercase">
-                      {selectedMode === 'daily' ? 'Score' : 'Streak'}
+                      {selectedMode === 'daily' ? 'Days' : 'Streak'}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-semibold text-terminal-muted uppercase">
                       Date
@@ -99,9 +100,21 @@ export default function Leaderboard() {
           )}
         </div>
 
-        <p className="text-center text-terminal-muted text-sm mt-8">
-          Click on a game mode at the top to view different leaderboards
-        </p>
+        {/* Mode explanation */}
+        <div className="mt-6 px-4 py-3 bg-terminal-surface border border-terminal-border rounded-lg text-sm text-terminal-muted font-mono">
+          {selectedMode === 'daily' && (
+            <p>📅 <span className="text-terminal-text font-semibold">Daily</span> — how many consecutive days you've solved the puzzle. Miss a day and your streak resets to zero.</p>
+          )}
+          {selectedMode === 'endless' && (
+            <p>♾️ <span className="text-terminal-text font-semibold">Endless</span> — your longest run of correct guesses in a single session. Each correct answer adds +1 to your streak.</p>
+          )}
+          {selectedMode === 'higher-lower' && (
+            <p>📊 <span className="text-terminal-text font-semibold">Higher or Lower</span> — how many consecutive correct higher/lower comparisons you got in one session.</p>
+          )}
+          {selectedMode === 'crypto' && (
+            <p>₿ <span className="text-terminal-text font-semibold">Crypto H/L</span> — how many consecutive correct higher/lower comparisons between cryptocurrencies you got in one session.</p>
+          )}
+        </div>
       </div>
     </div>
   );

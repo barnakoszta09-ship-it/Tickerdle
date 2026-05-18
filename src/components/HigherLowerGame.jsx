@@ -6,10 +6,11 @@ import { playSoundCorrect, playSoundWrong, playSoundWin, playSoundLose } from '.
 export default function HigherLowerGame() {
   const {
     hlCurrent, hlNext, hlStreak, hlGuessed, hlShowMarketCap,
-    makeHLGuess, hlGameOver, resetGame,
+    makeHLGuess, hlGameOver, resetGame, mode,
     playerName, playerId, scoreSubmitted, setScoreSubmitted,
     soundEnabled, soundVolume,
   } = useGame();
+  const isCrypto = mode === 'crypto';
   const [message, setMessage] = useState('');
   const [streakPop, setStreakPop] = useState(false);
   const hasScoreSaved = useRef(false);
@@ -37,7 +38,7 @@ export default function HigherLowerGame() {
   useEffect(() => {
     if (hlGameOver && !hasScoreSaved.current && !scoreSubmitted) {
       if (soundEnabled) playSoundLose(soundVolume);
-      saveScore('higher-lower', playerId, playerName, hlStreak);
+      saveScore(mode, playerId, playerName, hlStreak);
       setScoreSubmitted();
       hasScoreSaved.current = true;
     }
@@ -59,7 +60,9 @@ export default function HigherLowerGame() {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-4 w-full">
       <div className="text-center">
-        <p className="text-xs uppercase text-terminal-muted mb-2">Current Market Cap</p>
+        <p className="text-xs uppercase text-terminal-muted mb-2">
+          {isCrypto ? 'Current Market Cap' : 'Current Market Cap'}
+        </p>
         <div className="text-4xl font-bold font-mono text-terminal-text mb-1">
           {hlCurrent.symbol}
         </div>
@@ -72,7 +75,9 @@ export default function HigherLowerGame() {
       <div className="text-xl text-terminal-muted">↓</div>
 
       <div className="text-center">
-        <p className="text-xs uppercase text-terminal-muted mb-2">Next Company</p>
+        <p className="text-xs uppercase text-terminal-muted mb-2">
+          {isCrypto ? 'Next Cryptocurrency' : 'Next Company'}
+        </p>
         <div className="text-4xl font-bold font-mono text-terminal-text mb-1">
           {hlNext.symbol}
         </div>

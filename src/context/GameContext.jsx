@@ -2,6 +2,7 @@ import { createContext, useContext, useReducer, useEffect, useCallback, useRef }
 import { getDailyTicker, getRandomTicker, getDailySeed, isValidTicker } from '../utils/tickers';
 import { evaluateGuess, MAXATTEMPTS, WORDLENGTH } from '../utils/gameLogic';
 import { getRandomHLPair } from '../utils/sp500';
+import { getRandomCryptoPair } from '../utils/cryptoData';
 import { getOrCreatePlayerId } from '../utils/identity';
 
 const GameContext = createContext();
@@ -75,8 +76,8 @@ function getInitialState(mode = 'daily') {
 }
 
 function createFreshState(mode) {
-  if (mode === 'higher-lower') {
-    const pair = getRandomHLPair();
+  if (mode === 'higher-lower' || mode === 'crypto') {
+    const pair = mode === 'crypto' ? getRandomCryptoPair() : getRandomHLPair();
     return {
       mode,
       hlCurrent: pair.first,
@@ -233,7 +234,9 @@ function gameReducer(state, action) {
 
       if (isCorrect) {
         const newCurrent = state.hlNext;
-        const pair = getRandomHLPair(newCurrent.symbol);
+        const pair = state.mode === 'crypto'
+          ? getRandomCryptoPair(newCurrent.symbol)
+          : getRandomHLPair(newCurrent.symbol);
         return {
           ...state,
           hlCurrent: newCurrent,

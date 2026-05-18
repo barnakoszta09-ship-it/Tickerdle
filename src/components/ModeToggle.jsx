@@ -16,6 +16,7 @@ export default function ModeToggle() {
         <button onClick={() => switchMode('daily')} className={btnClass('daily')}>Daily</button>
         <button onClick={() => switchMode('endless')} className={btnClass('endless')}>Endless</button>
         <button onClick={() => switchMode('higher-lower')} className={btnClass('higher-lower')}>H/L</button>
+        <button onClick={() => switchMode('crypto')} className={btnClass('crypto')}>₿ H/L</button>
       </div>
       <button
         onClick={() => switchMode('leaderboard')}
