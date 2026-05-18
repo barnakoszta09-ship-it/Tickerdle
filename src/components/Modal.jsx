@@ -5,7 +5,7 @@ import { saveScore } from '../utils/leaderboard';
 
 export default function Modal() {
   const {
-    gameOver, won, target, mode, streak, dailyStreak, newEndlessGame, switchMode,
+    gameOver, won, target, mode, streak, dailyStreak, newEndlessGame, resetGame, switchMode,
     puzzleNumber, guesses, playerName, playerId, scoreSubmitted, setScoreSubmitted,
   } = useGame();
   const [show, setShow] = useState(false);
@@ -43,6 +43,12 @@ export default function Modal() {
   const handlePlayAgain = () => {
     hasScoreSaved.current = false;
     newEndlessGame();
+    setShow(false);
+  };
+
+  const handleTryAgain = () => {
+    hasScoreSaved.current = false;
+    resetGame();
     setShow(false);
   };
 
@@ -104,10 +110,10 @@ export default function Modal() {
             </button>
           ) : mode === 'daily' && !won ? (
             <button
-              onClick={handleContinueEndless}
+              onClick={handleTryAgain}
               className="px-6 py-3 bg-correct hover:bg-correct/90 text-white font-semibold rounded-lg transition-colors"
             >
-              Play Endless
+              Try Again
             </button>
           ) : (
             <button
