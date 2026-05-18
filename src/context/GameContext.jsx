@@ -35,7 +35,8 @@ function getInitialState(mode = 'daily') {
   const soundVolume   = isNaN(rawVolume) ? 0.5 : rawVolume;
   const chartStyle    = localStorage.getItem('tickerdle_chartStyle') || 'line';
   const showHowToPlay = localStorage.getItem('tickerdle_showHTP') !== 'false';
-  const soundSettings = { playerName, soundEnabled, soundVolume, chartStyle, showHowToPlay };
+  const hintsEnabled  = localStorage.getItem('tickerdle_hintsEnabled') !== 'false';
+  const soundSettings = { playerName, soundEnabled, soundVolume, chartStyle, showHowToPlay, hintsEnabled };
 
   if (saved) {
     const parsed = JSON.parse(saved);
@@ -284,6 +285,10 @@ function gameReducer(state, action) {
       return { ...state, showHowToPlay: action.showHowToPlay };
     }
 
+    case 'SET_HINTS_ENABLED': {
+      return { ...state, hintsEnabled: action.hintsEnabled };
+    }
+
     case 'USE_HINT': {
       return { ...state, hintUsed: true };
     }
@@ -398,6 +403,11 @@ export function GameProvider({ children }) {
     dispatch({ type: 'SET_SHOW_HTP', showHowToPlay: value });
   }, []);
 
+  const setHintsEnabled = useCallback((value) => {
+    localStorage.setItem('tickerdle_hintsEnabled', value);
+    dispatch({ type: 'SET_HINTS_ENABLED', hintsEnabled: value });
+  }, []);
+
   const setScoreSubmitted = useCallback(() => {
     dispatch({ type: 'SET_SCORE_SUBMITTED' });
   }, []);
@@ -432,6 +442,7 @@ export function GameProvider({ children }) {
     setSoundVolume,
     setChartStyle,
     setShowHowToPlay,
+    setHintsEnabled,
     setScoreSubmitted,
     useHint,
     revealLetter,

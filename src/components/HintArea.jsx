@@ -20,11 +20,13 @@ export default function HintArea() {
   const {
     guesses, evaluations, won, gameOver, target, mode,
     revealedLetterPos, revealLetter,
+    hintsEnabled = true,
   } = useGame();
   const [adOpen, setAdOpen] = useState(false);
 
-  // Only show hints in wordle modes
+  // Only show hints in wordle modes, and only if hints are enabled in settings
   if (mode !== 'daily' && mode !== 'endless') return null;
+  if (!hintsEnabled) return null;
 
   const autoHintVisible = guesses.length >= 3 && !won;
   const isOnLastGuess   = guesses.length === MAXATTEMPTS - 1;

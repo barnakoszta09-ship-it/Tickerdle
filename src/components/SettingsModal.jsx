@@ -8,6 +8,7 @@ export default function SettingsModal({ isOpen, onClose }) {
     soundVolume, setSoundVolume,
     chartStyle = 'line', setChartStyle,
     showHowToPlay = true, setShowHowToPlay,
+    hintsEnabled = true, setHintsEnabled,
   } = useGame();
 
   const [nameInput, setNameInput] = useState(playerName);
@@ -155,6 +156,28 @@ export default function SettingsModal({ isOpen, onClose }) {
                 }`}
               >
                 {showHowToPlay ? 'On' : 'Off'}
+              </button>
+            </div>
+          </div>
+
+          {/* ── Hints ───────────────────────────────────────────────────────── */}
+          <div className="mb-6 pb-6 border-b border-terminal-border">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-terminal-text">Hints</p>
+                <p className="text-[11px] text-terminal-muted mt-0.5">
+                  Auto-hint panel and letter reveal (Daily &amp; Endless)
+                </p>
+              </div>
+              <button
+                onClick={() => setHintsEnabled(!hintsEnabled)}
+                className={`px-4 py-2 rounded font-semibold transition-colors ${
+                  hintsEnabled
+                    ? 'bg-correct text-white'
+                    : 'bg-terminal-border text-terminal-muted'
+                }`}
+              >
+                {hintsEnabled ? 'On' : 'Off'}
               </button>
             </div>
           </div>
