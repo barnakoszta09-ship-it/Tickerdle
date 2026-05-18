@@ -84,7 +84,13 @@ export default function Modal() {
             <>
               <div className="text-4xl mb-2">📉</div>
               <h2 className="text-xl font-bold text-terminal-text">Game Over</h2>
-              <p className="text-terminal-muted mt-1">Better luck next time!</p>
+              {mode === 'endless' ? (
+                <p className="text-terminal-muted mt-1">
+                  The ticker was <span className="font-mono font-bold text-correct">{target}</span>
+                </p>
+              ) : (
+                <p className="text-terminal-muted mt-1">Better luck next time!</p>
+              )}
             </>
           )}
         </div>
