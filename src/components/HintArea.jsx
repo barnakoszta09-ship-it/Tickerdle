@@ -4,6 +4,9 @@ import HintPanel from './HintPanel';
 import AdRewardModal from './AdRewardModal';
 import { MAXATTEMPTS } from '../utils/gameLogic';
 
+// Set to true once AdSense is approved and rewarded ads are live
+const ADS_ENABLED = false;
+
 /**
  * Hint area — sits between the game grid and the How-to-Play nudge.
  * Only renders in daily and endless modes (never in H/L or leaderboard).
@@ -34,7 +37,8 @@ export default function HintArea() {
     return target.split('').some((_, i) => !correct.has(i));
   }, [target, evaluations, isOnLastGuess]);
 
-  const showRevealBtn = isOnLastGuess && !won && !gameOver
+  const showRevealBtn = ADS_ENABLED
+    && isOnLastGuess && !won && !gameOver
     && revealedLetterPos === null
     && hasRevealablePositions;
 
