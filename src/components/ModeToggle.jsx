@@ -39,7 +39,7 @@ export default function ModeToggle() {
       {isHLActive && (
         <div className="flex bg-terminal-surface rounded-lg p-1 gap-1">
           <button onClick={() => switchMode('higher-lower')} className={btnClass('higher-lower')}>📈 Stocks</button>
-          <button onClick={() => switchMode('crypto')}       className={btnClass('crypto')}>₿ Crypto</button>
+          <button onClick={() => switchMode('crypto')}       className={btnClass('crypto')}>🪙 Crypto</button>
           <button onClick={() => switchMode('mixed-hl')}     className={btnClass('mixed-hl')}>🔀 Mixed</button>
         </div>
       )}
