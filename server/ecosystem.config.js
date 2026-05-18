@@ -1,7 +1,7 @@
 // PM2 process config — run with: pm2 start ecosystem.config.js
 // Docs: https://pm2.keymetrics.io/docs/usage/application-declaration/
 
-export default {
+module.exports = {
   apps: [
     {
       name: 'tickerdle-server',
