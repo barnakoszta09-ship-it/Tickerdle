@@ -51,7 +51,15 @@ function getInitialState(mode = 'daily') {
     }
 
     if (parsed.mode === mode) {
-      return { ...parsed, ...soundSettings, scoreSubmitted: false };
+      return {
+        ...parsed,
+        ...soundSettings,
+        scoreSubmitted: false,
+        // ensure hint fields exist for saves that pre-date this feature
+        hintUsed: parsed.hintUsed ?? false,
+        revealedLetterPos: parsed.revealedLetterPos ?? null,
+        revealedLetterChar: parsed.revealedLetterChar ?? null,
+      };
     }
 
     if (parsed.mode === 'daily' && mode === 'endless' && parsed.endlessState) {
@@ -96,6 +104,10 @@ function createFreshState(mode) {
     dailyStreak: mode === 'daily' ? loadDailyStreak() : 0,
     usedTickers: mode === 'endless' ? [target] : [],
     scoreSubmitted: false,
+    // Hint system
+    hintUsed: false,
+    revealedLetterPos: null,
+    revealedLetterChar: null,
   };
 }
 
@@ -103,7 +115,9 @@ function gameReducer(state, action) {
   switch (action.type) {
     case 'ADDLETTER': {
       const targetLength = state.target ? state.target.length : WORDLENGTH;
-      if (state.gameOver || state.currentGuess.length >= targetLength) {
+      // When a letter is locked, the player fills (targetLength - 1) free positions
+      const freeLen = state.revealedLetterPos !== null ? targetLength - 1 : targetLength;
+      if (state.gameOver || state.currentGuess.length >= freeLen) {
         return state;
       }
       return {
@@ -123,11 +137,28 @@ function gameReducer(state, action) {
     }
 
     case 'SUBMITGUESS': {
-      const guess = state.currentGuess.toUpperCase();
+      const rawGuess = state.currentGuess.toUpperCase();
       const targetLength = state.target ? state.target.length : WORDLENGTH;
+      // When a letter is locked, the player only typed (targetLength - 1) free chars
+      const freeLen = state.revealedLetterPos !== null ? targetLength - 1 : targetLength;
 
-      if (state.gameOver || guess.length !== targetLength) {
+      if (state.gameOver || rawGuess.length !== freeLen) {
         return state;
+      }
+
+      // Reconstruct the full guess by inserting the locked letter at its position
+      let guess = rawGuess;
+      if (state.revealedLetterPos !== null && state.revealedLetterChar) {
+        const arr = [];
+        let freeIdx = 0;
+        for (let i = 0; i < targetLength; i++) {
+          if (i === state.revealedLetterPos) {
+            arr.push(state.revealedLetterChar);
+          } else {
+            arr.push(rawGuess[freeIdx++] || '');
+          }
+        }
+        guess = arr.join('');
       }
 
       if (!isValidTicker(guess)) {
@@ -253,6 +284,26 @@ function gameReducer(state, action) {
       return { ...state, showHowToPlay: action.showHowToPlay };
     }
 
+    case 'USE_HINT': {
+      return { ...state, hintUsed: true };
+    }
+
+    // Picks a random letter that hasn't been correctly placed yet and locks it.
+    case 'COMPUTE_AND_REVEAL_LETTER': {
+      if (state.revealedLetterPos !== null || !state.target) return state;
+      const correctPositions = new Set();
+      state.evaluations.forEach(row =>
+        row.forEach((e, i) => { if (e === 'correct') correctPositions.add(i); })
+      );
+      const candidates = state.target
+        .split('')
+        .map((char, i) => ({ pos: i, char }))
+        .filter(({ pos }) => !correctPositions.has(pos));
+      if (candidates.length === 0) return state;
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      return { ...state, revealedLetterPos: pick.pos, revealedLetterChar: pick.char };
+    }
+
     default:
       return state;
   }
@@ -351,6 +402,14 @@ export function GameProvider({ children }) {
     dispatch({ type: 'SET_SCORE_SUBMITTED' });
   }, []);
 
+  const useHint = useCallback(() => {
+    dispatch({ type: 'USE_HINT' });
+  }, []);
+
+  const revealLetter = useCallback(() => {
+    dispatch({ type: 'COMPUTE_AND_REVEAL_LETTER' });
+  }, []);
+
   useEffect(() => {
     if (state.hlGuessed !== null) {
       const timer = setTimeout(() => dispatch({ type: 'CLEAR_HL_GUESS' }), 1000);
@@ -374,6 +433,8 @@ export function GameProvider({ children }) {
     setChartStyle,
     setShowHowToPlay,
     setScoreSubmitted,
+    useHint,
+    revealLetter,
     puzzleNumber: getDailySeed(),
   };
 

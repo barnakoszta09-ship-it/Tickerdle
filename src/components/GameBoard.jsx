@@ -5,7 +5,11 @@ import { MAXATTEMPTS, WORDLENGTH } from '../utils/gameLogic.js';
 import { playSoundError, playSoundCorrect, playSoundWrong, playSoundWin } from '../utils/soundEffects';
 
 export default function GameBoard() {
-  const { guesses, evaluations, currentGuess, shake, revealRow, won, target, gameOver, soundEnabled, soundVolume } = useGame();
+  const {
+    guesses, evaluations, currentGuess, shake, revealRow, won, target, gameOver,
+    soundEnabled, soundVolume,
+    revealedLetterPos, revealedLetterChar,
+  } = useGame();
   const tickerLength = target ? target.length : WORDLENGTH;
 
   // Play shake sound for invalid ticker
@@ -45,16 +49,36 @@ export default function GameBoard() {
     const guess = isPastRow ? guesses[i] : (isCurrentRow ? currentGuess : '');
     const evaluation = isPastRow ? evaluations[i] : null;
     
+    // For the current (unfilled) row: if a letter is locked, build the display
+    // string by inserting the locked char at its position while currentGuess
+    // fills only the free slots (so the player types targetLength-1 letters).
+    let displayGuess = isCurrentRow ? currentGuess : guess;
+    if (isCurrentRow && revealedLetterPos !== null && revealedLetterChar !== null) {
+      let freeIdx = 0;
+      let dg = '';
+      for (let k = 0; k < tickerLength; k++) {
+        if (k === revealedLetterPos) {
+          dg += revealedLetterChar;
+        } else {
+          dg += (currentGuess[freeIdx++] || '');
+        }
+      }
+      displayGuess = dg;
+    }
+
     const tiles = [];
     for (let j = 0; j < tickerLength; j++) {
-      const letter = guess[j] || '';
-      const state = evaluation ? evaluation[j] : (letter ? 'filled' : 'empty');
-      
+      const isLockedPos = isCurrentRow && revealedLetterPos === j && revealedLetterChar !== null;
+      const letter = isPastRow ? (guess[j] || '') : (isCurrentRow ? (displayGuess[j] || '') : '');
+      const tileState = evaluation
+        ? evaluation[j]
+        : (isLockedPos ? 'correct' : (letter ? 'filled' : 'empty'));
+
       tiles.push(
         <Tile
           key={j}
           letter={letter}
-          state={state}
+          state={tileState}
           delay={j * 150}
           shouldAnimate={revealRow === i}
           tickerLength={tickerLength}

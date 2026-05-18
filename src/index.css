@@ -95,3 +95,13 @@ body {
   50% { transform: scale(1.05); }
   75% { transform: scale(1.02); }
 }
+
+/* ── Hint panel fade-in ──────────────────────────────────────────────────────── */
+.hint-fade-in {
+  animation: hintFadeIn 0.4s ease forwards;
+}
+
+@keyframes hintFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

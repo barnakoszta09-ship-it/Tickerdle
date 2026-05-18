@@ -9,6 +9,7 @@ import Leaderboard from './components/Leaderboard.jsx';
 import PlayerNameInput from './components/PlayerNameInput.jsx';
 import HowToPlay from './components/HowToPlay.jsx';
 import BackgroundChart from './components/BackgroundChart.jsx';
+import HintArea from './components/HintArea.jsx';
 
 const VALID_NAME_RE = /^[a-zA-Z0-9_]{2,16}$/;
 function hasValidName(name) {
@@ -94,6 +95,8 @@ function AppContent() {
                 <div className="flex-1 min-h-0 flex items-center justify-center w-full">
                   <GameBoard />
                 </div>
+                {/* Progressive hint panel + buttons */}
+                <HintArea />
                 {/* Scroll-down nudge — clickable when HTP is enabled */}
                 {showHowToPlay && (
                   <button

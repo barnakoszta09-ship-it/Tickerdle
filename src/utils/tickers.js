@@ -105,6 +105,23 @@ export const TICKERS = [
   ...HLTH, ...INDU, ...TECH, ...MATL, ...RLST, ...UTIL,
 ];
 
+// ── Sector lookup map (symbol → sector name) ──────────────────────────────────
+const _SECTOR_DEFS = [
+  ['Communication Services', COMM],
+  ['Consumer Discretionary', DISC],
+  ['Consumer Staples',       STAP],
+  ['Energy',                 ENRG],
+  ['Financials',             FINL],
+  ['Health Care',            HLTH],
+  ['Industrials',            INDU],
+  ['Information Technology', TECH],
+  ['Materials',              MATL],
+  ['Real Estate',            RLST],
+  ['Utilities',              UTIL],
+];
+export const TICKER_SECTORS = {};
+_SECTOR_DEFS.forEach(([name, arr]) => arr.forEach(t => { TICKER_SECTORS[t] = name; }));
+
 // ── Helper functions (keep in sync with server) ───────────────────────────────
 
 export function getDailySeed() {
