@@ -49,27 +49,28 @@ export default function GameBoard() {
     const guess = isPastRow ? guesses[i] : (isCurrentRow ? currentGuess : '');
     const evaluation = isPastRow ? evaluations[i] : null;
     
-    // For the current (unfilled) row: if a letter is locked, build the display
-    // string by inserting the locked char at its position while currentGuess
-    // fills only the free slots (so the player types targetLength-1 letters).
-    let displayGuess = isCurrentRow ? currentGuess : guess;
+    // For the current (unfilled) row: if a letter is locked, build a per-slot
+    // array so empty free-slots don't collapse the string and push the locked
+    // letter to the wrong index (e.g. 'C'+''+' S' → 'CS', length 2, not 3).
+    let displayLetters = null;
     if (isCurrentRow && revealedLetterPos !== null && revealedLetterChar !== null) {
+      displayLetters = new Array(tickerLength).fill('');
       let freeIdx = 0;
-      let dg = '';
       for (let k = 0; k < tickerLength; k++) {
-        if (k === revealedLetterPos) {
-          dg += revealedLetterChar;
-        } else {
-          dg += (currentGuess[freeIdx++] || '');
-        }
+        displayLetters[k] = k === revealedLetterPos
+          ? revealedLetterChar
+          : (currentGuess[freeIdx++] || '');
       }
-      displayGuess = dg;
     }
 
     const tiles = [];
     for (let j = 0; j < tickerLength; j++) {
       const isLockedPos = isCurrentRow && revealedLetterPos === j && revealedLetterChar !== null;
-      const letter = isPastRow ? (guess[j] || '') : (isCurrentRow ? (displayGuess[j] || '') : '');
+      const letter = isPastRow
+        ? (guess[j] || '')
+        : isCurrentRow
+          ? (displayLetters ? displayLetters[j] : (currentGuess[j] || ''))
+          : '';
       const tileState = evaluation
         ? evaluation[j]
         : (isLockedPos ? 'correct' : (letter ? 'filled' : 'empty'));
