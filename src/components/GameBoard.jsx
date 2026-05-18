@@ -6,11 +6,11 @@ import { playSoundError, playSoundCorrect, playSoundWrong, playSoundWin } from '
 
 export default function GameBoard() {
   const {
-    guesses, evaluations, currentGuess, shake, revealRow, won, target, gameOver,
+    guesses, evaluations, currentGuess, shake, revealRow, won, targetLength, gameOver,
     soundEnabled, soundVolume,
     revealedLetterPos, revealedLetterChar,
   } = useGame();
-  const tickerLength = target ? target.length : WORDLENGTH;
+  const tickerLength = targetLength ?? WORDLENGTH;
 
   // Play shake sound for invalid ticker
   useEffect(() => {
