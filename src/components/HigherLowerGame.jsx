@@ -24,10 +24,6 @@ export default function HigherLowerGame() {
   const [streakPop, setStreakPop] = useState(false);
   const hasScoreSaved = useRef(false);
 
-  const handleGuess = (guess) => {
-    makeHLGuess(guess);
-  };
-
   useEffect(() => {
     if (hlGuessed !== null) {
       if (hlGuessed) {
@@ -114,13 +110,13 @@ export default function HigherLowerGame() {
         {!hlGameOver ? (
           <>
             <button
-              onClick={() => handleGuess('higher')}
+              onClick={() => makeHLGuess('higher')}
               className="px-8 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
             >
               Higher
             </button>
             <button
-              onClick={() => handleGuess('lower')}
+              onClick={() => makeHLGuess('lower')}
               className="px-8 py-3 bg-terminal-border hover:bg-terminal-muted/30 text-terminal-text font-semibold rounded-lg transition-colors"
             >
               Lower

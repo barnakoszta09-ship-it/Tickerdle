@@ -204,10 +204,12 @@ function gameReducer(state, action) {
 
     case 'NEWENDLESSGAME': {
       const newTarget = getRandomTicker(state.usedTickers);
+      // Cap usedTickers so localStorage doesn't grow unboundedly (~460 tickers in pool)
+      const prevUsed = state.usedTickers.length >= 400 ? [] : state.usedTickers;
       return {
         ...createFreshState('endless'),
         streak: state.won ? state.streak : 0,
-        usedTickers: [...state.usedTickers, newTarget],
+        usedTickers: [...prevUsed, newTarget],
         target: newTarget,
         soundEnabled: state.soundEnabled,
         soundVolume: state.soundVolume,
@@ -329,7 +331,9 @@ export function GameProvider({ children }) {
   const playerId = useRef(getOrCreatePlayerId()).current;
 
   useEffect(() => {
-    localStorage.setItem(STORAGEKEY, JSON.stringify(state));
+    // Omit transient UI fields that don't need to survive a page reload
+    const { shake, revealRow, hlGuessed, ...persistable } = state;
+    localStorage.setItem(STORAGEKEY, JSON.stringify(persistable));
   }, [state]);
 
   // Daily streak — runs only on daily wins, never touches endless/HL.

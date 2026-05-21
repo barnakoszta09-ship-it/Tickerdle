@@ -27,7 +27,7 @@ export default function GameBoard() {
       const isLastGuess = revealRow === guesses.length - 1;
       
       // Add delay for sound to play after flip animation completes
-      setTimeout(() => {
+      const id = setTimeout(() => {
         if (hasCorrect && isLastGuess && won) {
           playSoundWin(soundVolume);
         } else if (isLastGuess && gameOver && !won) {
@@ -38,6 +38,7 @@ export default function GameBoard() {
           playSoundWrong(soundVolume * 0.6);
         }
       }, 100 + tickerLength * 100); // Wait for tile flip animations
+      return () => clearTimeout(id);
     }
   }, [revealRow, evaluations, won, gameOver, soundEnabled, soundVolume, guesses.length, tickerLength]);
 
