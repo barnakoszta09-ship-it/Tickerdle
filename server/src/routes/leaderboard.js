@@ -7,7 +7,7 @@ const __dirname       = dirname(fileURLToPath(import.meta.url));
 const DATA_DIR        = join(__dirname, '../../../data');
 const LEADERBOARD_FILE = join(DATA_DIR, 'leaderboard.json');
 
-const VALID_MODES = new Set(['daily', 'endless', 'higher-lower']);
+const VALID_MODES = new Set(['daily', 'endless', 'higher-lower', 'crypto', 'mixed-hl']);
 
 function todayString() {
   return new Date().toISOString().slice(0, 10);
