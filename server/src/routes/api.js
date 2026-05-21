@@ -352,6 +352,20 @@ router.post('/bug-report', (req, res) => {
     if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
     appendFileSync(BUG_FILE, JSON.stringify(report) + '\n', 'utf8');
     res.json({ success: true });
+
+    if (resend && ADMIN_EMAIL) {
+      resend.emails.send({
+        from: 'Tickerdle <onboarding@resend.dev>',
+        to: ADMIN_EMAIL,
+        subject: '🐛 New Tickerdle Bug Report',
+        html: `<p><b>Description:</b> ${report.description}</p>
+               <p><b>Mode:</b> ${report.mode}</p>
+               <p><b>Device/Browser:</b> ${report.userAgent}</p>
+               <p><b>Timestamp:</b> ${report.timestamp}</p>
+               <p><b>IP:</b> ${report.ip}</p>
+               <hr><p style="color:#888">Sent from tickerdle.org bug report system</p>`,
+      }).catch(err => console.error('[bug-report] Email failed:', err));
+    }
   } catch (err) {
     console.error('[bug-report] Failed to save:', err);
     res.status(500).json({ error: 'Failed to save report' });
