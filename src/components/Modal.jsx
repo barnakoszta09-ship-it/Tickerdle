@@ -15,7 +15,7 @@ export default function Modal() {
     if (gameOver && !hasScoreSaved.current && !scoreSubmitted) {
       let score = 0;
       if (mode === 'daily') {
-        score = won ? dailyStreak : 0;
+        score = won ? dailyStreak + 1 : 0; // +1 because streak increments after this effect fires
       } else if (mode === 'endless') {
         score = streak;
       }
